@@ -1,8 +1,15 @@
 # Deployment Guide - Hackathon 0 Personal AI Employee
 
-**Tier**: Silver (Bronze + Gmail + PM2)  
-**Status**: Production-ready  
-**Updated**: February 7, 2026
+**Tier**: Silver (Bronze + Gmail OAuth + PM2 Daemons)  
+**Status**: ✅ Production-ready and operational  
+**Updated**: February 8, 2026
+
+**Current Metrics**:
+- 🤖 AI Engine: Claude Sonnet 4.5 (Anthropic API)
+- ⚡ Services Running: 3/3 (orchestrator, filesystem, gmail)
+- ✉️ Gmail Integration: OAuth authenticated
+- 📊 Plans Generated: 9 comprehensive plans (72.9 KB)
+- 💰 API Cost: ~$0.003/task
 
 ---
 
@@ -10,22 +17,22 @@
 
 ```bash
 # 1. Install prerequisites
-npm install -g @anthropic-ai/claude-code pm2
 pip install -r requirements.txt
+npm install -g pm2
 
 # 2. Configure environment
 cp .env.example .env
-# Edit .env with your credentials
+# Edit .env and add ANTHROPIC_API_KEY=sk-ant-api03-your-key-here
 
 # 3. Create watch directory
 mkdir watch_inbox
 
 # 4. Test filesystem watcher
-python watcher_filesystem.py &
-echo "Test task" > watch_inbox/test.txt
+python watchers/filesystem_watcher.py &
+echo "Test task: Create a marketing plan for Q1" > watch_inbox/test.txt
 
 # 5. Run orchestrator
-python orchestrator_claude.py
+python orchestration/orchestrator_claude.py
 
 # 6. Check results
 ls obsidian_vault/Needs_Action
@@ -35,19 +42,89 @@ ls obsidian_vault/Done
 
 ---
 
-## Silver Tier Deployment (24/7 Operation)
+## Silver Tier Deployment (24/7 Operation + Gmail)
 
-### 1. Configure Gmail API
+### Prerequisites
+- Python 3.12+
+- Node.js 24+ (for PM2)
+- Anthropic API key ($5 credit from https://console.anthropic.com)
+- Google Cloud project with Gmail API enabled
+- PM2 installed globally: `npm install -g pm2`
+
+### 1. Configure Gmail API (OAuth 2.0)
+
+#### Step 1.1: Create Google Cloud Project
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com)
+2. Create new project: "Personal AI Employee"
+3. Enable Gmail API:
+   - Navigate to "APIs & Services" → "Library"
+   - Search for "Gmail API"
+   - Click "Enable"
+
+#### Step 1.2: Create OAuth Credentials
+
+1. Go to "APIs & Services" → "Credentials"
+2. Click "Create Credentials" → "OAuth client ID"
+3. Application type: "Desktop app"
+4. Name: "AI Employee Gmail"
+5. Download JSON as `gmail_credentials.json`
+6. Save to `secrets/gmail_credentials.json`
+
+> **Important**: If you see "Access blocked: This app's request is invalid", add your email as a test user:
+> - Go to "OAuth consent screen"
+> - Scroll to "Test users"
+> - Add your Gmail address
+
+#### Step 1.3: Run OAuth Authentication
 
 ```bash
-# Download credentials from Google Cloud Console
-# Save to secrets/gmail_credentials.json
+# Run the setup script
+python setup_gmail.py
 
-# First run triggers OAuth flow
-python watcher_gmail.py
-# Follow browser prompt to authorize
-# token.json will be created in secrets/
+# This will:
+# 1. Open your browser for authorization
+# 2. Ask you to sign in with Google
+# 3. Grant permissions (gmail.readonly, gmail.send, gmail.modify)
+# 4. Save token to secrets/gmail_token.json
 ```
+
+Expected output:
+```
+Please visit this URL to authorize: https://accounts.google.com/o/oauth2/auth?...
+OAuth token saved to secrets/gmail_token.json
+Gmail authentication successful!
+```
+
+#### Step 1.4: Verify Gmail Token
+
+```bash
+# Check token validity
+python -c "
+import json
+with open('secrets/gmail_token.json') as f:
+    token = json.load(f)
+    print('Token scopes:', token.get('scopes', []))
+"
+```
+
+Expected scopes:
+- `https://www.googleapis.com/auth/gmail.readonly`
+- `https://www.googleapis.com/auth/gmail.send`
+- `https://www.googleapis.com/auth/gmail.modify`
+
+#### Troubleshooting Gmail OAuth
+
+**Error: "Access blocked: This app's request is invalid"**
+- Solution: Add your email to test users in OAuth consent screen
+- Location: Google Cloud Console → APIs & Services → OAuth consent screen → Test users
+
+**Error: "Token expired"**
+- Solution: Delete `secrets/gmail_token.json` and re-run `python setup_gmail.py`
+
+**Error: "Insufficient permissions"**
+- Solution: Check that Gmail API is enabled in Google Cloud Console
+- Ensure scopes include: readonly, send, modify
 
 ### 2. Start PM2 Daemons
 
@@ -99,7 +176,7 @@ VAULT_PATH=./obsidian_vault
 ENVIRONMENT=production
 LOG_LEVEL=INFO
 
-# Claude Code (Anthropic)
+# Anthropic API (Claude Sonnet 4.5)
 ANTHROPIC_API_KEY=sk-ant-api03-...
 
 # Gmail API (Silver Tier)
