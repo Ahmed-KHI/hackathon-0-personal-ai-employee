@@ -13,19 +13,23 @@ This orchestrator follows the specification:
 import os
 import time
 import json
-import subprocess
 import logging
 from pathlib import Path
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
 import schedule
+from anthropic import Anthropic
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('logs/orchestrator.log'),
+        logging.FileHandler('logs/orchestrator.log', encoding='utf-8'),
         logging.StreamHandler()
     ]
 )
@@ -45,6 +49,12 @@ class Orchestrator:
         self.logs = self.vault_path / "Logs"
         self.in_progress = self.vault_path / "In_Progress" 
         self.briefings = self.vault_path / "Briefings"
+        
+        # Initialize Anthropic client
+        api_key = os.getenv('ANTHROPIC_API_KEY')
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY not found in environment variables")
+        self.anthropic = Anthropic(api_key=api_key)
         
         # Ensure all folders exist
         for folder in [self.needs_action, self.plans, self.done, 
@@ -70,58 +80,158 @@ class Orchestrator:
     
     def trigger_claude_code(self, task_file: Path) -> Dict:
         """
-        Trigger Claude Code to process task and create Plan.md
+        Trigger Claude (via Anthropic API) to process task and create Plan.md
         
         Uses the Ralph Wiggum stop hook to ensure Claude completes the task
         """
         task_id = task_file.stem
-        prompt = f"""
-You are an autonomous AI Employee. Process this task file and create a detailed Plan.md.
+        
+        # Read the task file content
+        try:
+            task_content = task_file.read_text(encoding='utf-8')
+        except Exception as e:
+            logger.error(f"Failed to read task file {task_file}: {e}")
+            return {"status": "error", "message": f"Failed to read task: {e}"}
+        
+        # Build system prompt with Agent Skills
+        system_prompt = """
+You are an autonomous AI Employee with file system access. Your role is to:
+1. Analyze incoming tasks
+2. Create detailed execution plans
+3. Update the knowledge base (Obsidian vault)
+4. Execute safe actions or flag for human approval
+5. Maintain audit logs
 
-Task File: {task_file}
+You have access to:
+- Company_Handbook.md: Company policies and procedures
+- Business_Goals.md: Strategic objectives
+- agent_skills/*.md: Specialized skill templates
+
+When you complete a task, output: <promise>TASK_COMPLETE</promise>
+"""
+        
+        user_prompt = f"""
+Process this task and create a detailed Plan.md file.
+
 Task ID: {task_id}
+Task Content:
+{task_content}
 
 Instructions:
-1. Read the task file carefully
-2. Check Company_Handbook.md and Business_Goals.md for context
-3. Apply relevant Agent Skills from obsidian_vault/agent_skills/
-4. Create a Plan.md file in /Plans/{task_id}_plan.md with:
+1. Create a Plan.md file in /Plans/{task_id}_plan.md with:
    - Clear objective
    - Step-by-step breakdown
    - HITL requirements (if any)
    - Success criteria
-5. Update Dashboard.md with current task status
-6. If HITL required: create file in /Pending_Approval instead of executing
-7. If safe to execute: perform actions via MCP servers
-8. Log all actions to /Logs/
-9. When complete: Move files to /Done and output: <promise>TASK_COMPLETE</promise>
 
-Follow the Ralph Wiggum pattern: Do NOT stop until this task is complete.
+2. If action requires approval (emails, payments, etc.):
+   - Create approval request in /Pending_Approval/{task_id}_approval.md
+   - Include: action type, details, risk level, recommendation
+
+3. If safe to auto-execute:
+   - Document the action in /Logs/{task_id}_log.md
+   - Note: Actual MCP execution will happen in next phase
+
+4. Update Dashboard.md with task status
+
+5. When plan is complete, output: <promise>TASK_COMPLETE</promise>
+
+Respond with the complete plan and any files you would create.
 """
         
         try:
-            # Call Claude Code with the prompt
-            result = subprocess.run(
-                ['claude', '--prompt', prompt, '--cwd', str(self.vault_path)],
-                capture_output=True,
-                text=True,
-                timeout=300  # 5 minute timeout
+            logger.info(f"Calling Anthropic API for task {task_id}...")
+            
+            # Call Anthropic API
+            message = self.anthropic.messages.create(
+                model="claude-sonnet-4-20250514",  # Claude Sonnet 4.5
+                max_tokens=4000,
+                system=system_prompt,
+                messages=[
+                    {"role": "user", "content": user_prompt}
+                ]
             )
             
+            # Extract response text
+            response_text = message.content[0].text
+            
+            # Log response (first 500 chars)
+            logger.info(f"Claude response: {response_text[:500]}...")
+            
             # Check for completion promise
-            if '<promise>TASK_COMPLETE</promise>' in result.stdout:
+            if '<promise>TASK_COMPLETE</promise>' in response_text:
                 logger.info(f"Task {task_id} completed successfully")
-                return {"status": "complete", "output": result.stdout}
+                
+                # Save the plan to /Plans
+                self._save_plan_from_response(task_id, response_text)
+                
+                return {"status": "complete", "output": response_text}
             else:
                 logger.warning(f"Task {task_id} did not complete - may need continuation")
-                return {"status": "incomplete", "output": result.stdout}
+                return {"status": "incomplete", "output": response_text}
                 
-        except subprocess.TimeoutExpired:
-            logger.error(f"Task {task_id} timed out")
-            return {"status": "timeout"}
         except Exception as e:
-            logger.error(f"Error executing Claude Code: {e}")
+            logger.error(f"Error calling Anthropic API: {e}")
             return {"status": "error", "message": str(e)}
+    
+    def _save_plan_from_response(self, task_id: str, response_text: str):
+        """
+        Extract and save the plan from Claude's response to /Plans folder
+        """
+        try:
+            # Save the full response as the plan
+            plan_file = self.plans / f"{task_id}_plan.md"
+            
+            # Add metadata header
+            plan_content = f"""---
+task_id: {task_id}
+created: {datetime.now(timezone.utc).isoformat()}
+status: completed
+---
+
+# Plan for {task_id}
+
+{response_text}
+"""
+            plan_file.write_text(plan_content, encoding='utf-8')
+            logger.info(f"Saved plan to {plan_file}")
+            
+            # Update Dashboard
+            self._update_dashboard_with_task(task_id, "completed")
+            
+        except Exception as e:
+            logger.error(f"Failed to save plan for {task_id}: {e}")
+    
+    def _update_dashboard_with_task(self, task_id: str, status: str):
+        """
+        Update Dashboard.md with task status
+        """
+        try:
+            dashboard_path = self.vault_path / "Dashboard.md"
+            
+            # Create simple dashboard entry
+            entry = f"\n- [{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')}] Task `{task_id}`: {status}\n"
+            
+            if dashboard_path.exists():
+                content = dashboard_path.read_text(encoding='utf-8')
+                # Append to recent tasks section or create it
+                if "## Recent Tasks" in content:
+                    content = content.replace("## Recent Tasks", f"## Recent Tasks{entry}")
+                else:
+                    content += f"\n## Recent Tasks{entry}"
+            else:
+                content = f"""# AI Employee Dashboard
+
+Last Updated: {datetime.now(timezone.utc).isoformat()}
+
+## Recent Tasks{entry}
+"""
+            
+            dashboard_path.write_text(content, encoding='utf-8')
+            logger.info(f"Updated Dashboard with task {task_id}")
+            
+        except Exception as e:
+            logger.error(f"Failed to update dashboard: {e}")
     
     def process_approvals(self):
         """
@@ -296,7 +406,7 @@ Use the CEO Briefing template from planning_skills.md.
     
     def start(self):
         """Start the orchestrator with scheduling"""
-        logger.info("🚀 Personal AI Employee Starting...")
+        logger.info("Personal AI Employee Starting...")
         
         # Schedule Monday Morning CEO Briefing (every Monday at 7 AM)
         schedule.every().monday.at("07:00").do(self.generate_ceo_briefing)

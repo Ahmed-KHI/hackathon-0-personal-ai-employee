@@ -140,7 +140,7 @@ message_id: {message_id}
     
     def run(self):
         """Main watcher loop"""
-        logger.info(f"👀 Gmail watcher starting (checking  every {self.check_interval}s)...")
+        logger.info(f"Gmail watcher starting (checking  every {self.check_interval}s)...")
         
         while True:
             try:

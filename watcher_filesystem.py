@@ -93,7 +93,7 @@ status: pending
         observer.schedule(self, str(self.watch_path), recursive=False)
         observer.start()
         
-        logger.info(f"👀 Watching {self.watch_path} for new files...")
+        logger.info(f"Watching {self.watch_path} for new files...")
         
         try:
             while True:
