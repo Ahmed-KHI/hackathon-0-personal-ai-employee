@@ -1,0 +1,22 @@
+{
+  "task_id": "b7ca8c0c-b4a3-492a-baf3-8be1c8d762cd",
+  "created_at": "2026-02-06T00:05:57.385764+00:00",
+  "source": "filesystem_watcher",
+  "type": "file_process",
+  "priority": "normal",
+  "context": {
+    "file_name": "meeting_request.txt",
+    "file_path": "I:\\hackathon 0 personal ai employee\\watch_inbox\\meeting_request.txt",
+    "file_size_bytes": 84,
+    "file_modified": 1770336357.384766,
+    "file_extension": ".txt",
+    "contents": "[Binary file - not readable]"
+  },
+  "required_skills": [
+    "planning_skills"
+  ],
+  "hitl_required": false,
+  "status": "completed",
+  "completed_at": "2026-02-06T00:06:11.602310+00:00",
+  "result": "Completed 3 actions. Confidence: 0.7"
+}

@@ -1,0 +1,30 @@
+{
+  "watchdog_running": true,
+  "start_time": "2026-02-05T23:23:48.877439+00:00",
+  "uptime_seconds": 2730.379215,
+  "check_interval": 30,
+  "total_components": 3,
+  "running_components": 3,
+  "failed_components": 0,
+  "stopped_components": 0,
+  "components": {
+    "task_queue": {
+      "status": "running",
+      "last_check": "2026-02-06T00:09:19.256654+00:00",
+      "failure_count": 0,
+      "last_failure": null
+    },
+    "vault": {
+      "status": "running",
+      "last_check": "2026-02-06T00:09:19.256654+00:00",
+      "failure_count": 0,
+      "last_failure": null
+    },
+    "audit_logs": {
+      "status": "running",
+      "last_check": "2026-02-06T00:09:19.256654+00:00",
+      "failure_count": 0,
+      "last_failure": null
+    }
+  }
+}
