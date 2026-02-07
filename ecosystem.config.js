@@ -38,6 +38,17 @@ module.exports = {
       watch: false,
       error_file: './logs/watcher_gmail_error.log',
       out_file: './logs/watcher_gmail_out.log'
+    },
+    {
+      name: 'watcher-linkedin',
+      script: 'watcher_linkedin.py',
+      interpreter: 'python',
+      cwd: './',
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      error_file: './logs/watcher_linkedin_error.log',
+      out_file: './logs/watcher_linkedin_out.log'
     }
   ]
 };

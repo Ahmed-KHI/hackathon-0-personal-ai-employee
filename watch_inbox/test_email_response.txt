@@ -1,0 +1,8 @@
+From: client@example.com
+Subject: Need help with invoice
+
+Hi,
+
+Can you send me the invoice for last month? I need it for my records.
+
+Thanks!

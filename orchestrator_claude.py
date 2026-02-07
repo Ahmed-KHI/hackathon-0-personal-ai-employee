@@ -11,6 +11,7 @@ This orchestrator follows the specification:
 """
 
 import os
+import sys
 import time
 import json
 import logging
@@ -20,6 +21,9 @@ from typing import Dict, List, Optional
 import schedule
 from anthropic import Anthropic
 from dotenv import load_dotenv
+
+# Add MCP servers to Python path
+sys.path.append(str(Path(__file__).parent / "mcp_servers"))
 
 # Load environment variables
 load_dotenv()
@@ -264,20 +268,52 @@ Last Updated: {datetime.now(timezone.utc).isoformat()}
             self.execute_email_action(content)
         elif 'action: payment' in content:
             self.execute_payment_action(content)
-        elif 'action: social_post' in content:
+        elif 'action: social_post' in content or 'action: linkedin_post' in content:
             self.execute_social_action(content)
         else:
             logger.warning(f"Unknown action type in {approval_file.name}")
     
     def execute_email_action(self, content: str):
-        """Execute email send via email-mcp"""
-        # TODO: Parse email details and call MCP
-        logger.info("EMAIL ACTION: Would send email via email-mcp")
-        self.log_action({
-            "action_type": "email_send",
-            "status": "executed",
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        })
+        """Execute email send via email MCP server"""
+        try:
+            # Import email MCP server
+            from email_server.email_server import EmailServer
+            
+            # Parse email details from content
+            email_data = self._parse_email_from_content(content)
+            
+            if not email_data:
+                logger.error("Failed to parse email data from approval file")
+                return
+            
+            # Initialize email server and send
+            email_server = EmailServer()
+            result = email_server.process_action('send_email', email_data)
+            
+            logger.info(f"Email sent successfully: {result}")
+            self.log_action({
+                "action_type": "email_send",
+                "status": "executed",
+                "recipient": email_data.get('to'),
+                "subject": email_data.get('subject'),
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+        except ImportError:
+            logger.warning("Email MCP server not available - using stub")
+            logger.info("EMAIL ACTION: Would send email via email-mcp")
+            self.log_action({
+                "action_type": "email_send",
+                "status": "stub_executed",
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+        except Exception as e:
+            logger.error(f"Failed to send email: {e}")
+            self.log_action({
+                "action_type": "email_send",
+                "status": "failed",
+                "error": str(e),
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
     
     def execute_payment_action(self, content: str):
         """Execute payment via payment-mcp"""
@@ -290,14 +326,45 @@ Last Updated: {datetime.now(timezone.utc).isoformat()}
         })
     
     def execute_social_action(self, content: str):
-        """Execute social media post via social-mcp"""
-        # TODO: Parse post details and call MCP
-        logger.info("SOCIAL ACTION: Would post to social media via social-mcp")
-        self.log_action({
-            "action_type": "social_post",
-            "status": "executed",
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        })
+        """Execute social media post via LinkedIn MCP server"""
+        try:
+            # Import LinkedIn MCP server
+            from linkedin_server.linkedin_server import process_action
+            
+            # Parse LinkedIn post details from content
+            post_data = self._parse_linkedin_from_content(content)
+            
+            if not post_data:
+                logger.error("Failed to parse LinkedIn post data from approval file")
+                return
+            
+            # Execute LinkedIn post
+            result = process_action('post_update', post_data)
+            
+            logger.info(f"LinkedIn post executed: {result}")
+            self.log_action({
+                "action_type": "linkedin_post",
+                "status": "executed",
+                "platform": "LinkedIn",
+                "text_preview": post_data.get('text', '')[:100],
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+        except ImportError:
+            logger.warning("LinkedIn MCP server not available - using stub")
+            logger.info("SOCIAL ACTION: Would post to LinkedIn via linkedin-mcp")
+            self.log_action({
+                "action_type": "social_post",
+                "status": "stub_executed",
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+        except Exception as e:
+            logger.error(f"Failed to post to LinkedIn: {e}")
+            self.log_action({
+                "action_type": "social_post",
+                "status": "failed",
+                "error": str(e),
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
     
     def log_rejection(self, rejected_file: Path):
         """Log that a human rejected an action"""
@@ -306,6 +373,54 @@ Last Updated: {datetime.now(timezone.utc).isoformat()}
             "file": rejected_file.name,
             "timestamp": datetime.now(timezone.utc).isoformat()
         })
+    
+    def _parse_email_from_content(self, content: str) -> Optional[Dict]:
+        """Extract email details from approval file content"""
+        try:
+            # Simple parser for YAML-style frontmatter
+            lines = content.split('\n')
+            email_data = {}
+            
+            for line in lines:
+                if line.startswith('to:'):
+                    email_data['to'] = line.split(':', 1)[1].strip()
+                elif line.startswith('subject:'):
+                    email_data['subject'] = line.split(':', 1)[1].strip()
+                elif line.startswith('body:'):
+                    # Get rest of content after body:
+                    body_start = content.index('body:')
+                    email_data['body'] = content[body_start + 5:].strip()
+                    break
+            
+            return email_data if ('to' in email_data and 'subject' in email_data) else None
+        except Exception as e:
+            logger.error(f"Error parsing email content: {e}")
+            return None
+    
+    def _parse_linkedin_from_content(self, content: str) -> Optional[Dict]:
+        """Extract LinkedIn post details from approval file content"""
+        try:
+            # Simple parser for YAML-style frontmatter
+            lines = content.split('\n')
+            post_data = {}
+            
+            for line in lines:
+                if line.startswith('text:'):
+                    # Get rest of content after text:
+                    text_start = content.index('text:')
+                    post_data['text'] = content[text_start + 5:].strip()
+                    break
+                elif line.startswith('visibility:'):
+                    post_data['visibility'] = line.split(':', 1)[1].strip()
+            
+            # Default visibility to PUBLIC if not specified
+            if 'visibility' not in post_data:
+                post_data['visibility'] = 'PUBLIC'
+            
+            return post_data if 'text' in post_data else None
+        except Exception as e:
+            logger.error(f"Error parsing LinkedIn content: {e}")
+            return None
     
     def log_action(self, action_data: Dict):
         """Write action to /Logs/YYYY-MM-DD.json (audit trail)"""

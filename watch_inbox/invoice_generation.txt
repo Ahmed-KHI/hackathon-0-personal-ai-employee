@@ -1,0 +1,14 @@
+Invoice Generation Required
+
+Create and send invoices for the following completed projects:
+- Project Mercury: $8,500 (Client: Tech Innovations Ltd)
+- Project Venus: $12,000 (Client: Digital Solutions Inc)  
+- Project Mars: $6,750 (Client: Future Systems Corp)
+
+Include:
+- Itemized breakdown
+- Payment terms (Net 30)
+- Bank transfer details
+- Professional invoice template
+
+REQUIRES APPROVAL before sending to clients.

@@ -1,0 +1,69 @@
+{
+  "timestamp": "2026-02-08T03:57:22.688117",
+  "tier": "Silver",
+  "passed": 10,
+  "failed": 0,
+  "completion_rate": 100.0,
+  "tests": [
+    {
+      "test": "Filesystem Watcher",
+      "passed": true,
+      "details": "Found watchdog import and task creation logic",
+      "timestamp": "2026-02-08T03:57:22.608907"
+    },
+    {
+      "test": "Gmail Watcher",
+      "passed": true,
+      "details": "Gmail OAuth configured",
+      "timestamp": "2026-02-08T03:57:22.622114"
+    },
+    {
+      "test": "LinkedIn Automation",
+      "passed": true,
+      "details": "All 4 LinkedIn components present",
+      "timestamp": "2026-02-08T03:57:22.623115"
+    },
+    {
+      "test": "Plan.md Generation",
+      "passed": true,
+      "details": "Anthropic API integrated, 9 plans generated",
+      "timestamp": "2026-02-08T03:57:22.639177"
+    },
+    {
+      "test": "HITL 10-Folder Workflow",
+      "passed": true,
+      "details": "All 9 folders exist",
+      "timestamp": "2026-02-08T03:57:22.644815"
+    },
+    {
+      "test": "Agent Skills",
+      "passed": true,
+      "details": "7 skills, 2567 lines total",
+      "timestamp": "2026-02-08T03:57:22.654635"
+    },
+    {
+      "test": "Time-Based Scheduler",
+      "passed": true,
+      "details": "Monday CEO briefing scheduled",
+      "timestamp": "2026-02-08T03:57:22.661170"
+    },
+    {
+      "test": "MCP Integration",
+      "passed": true,
+      "details": "4/4 MCP servers exist, orchestrator integrated: True",
+      "timestamp": "2026-02-08T03:57:22.665172"
+    },
+    {
+      "test": "PM2 Configuration",
+      "passed": true,
+      "details": "4 services configured (orchestrator + watchers)",
+      "timestamp": "2026-02-08T03:57:22.675864"
+    },
+    {
+      "test": "Environment Setup",
+      "passed": true,
+      "details": "All required env vars documented",
+      "timestamp": "2026-02-08T03:57:22.679868"
+    }
+  ]
+}

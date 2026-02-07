@@ -1,0 +1,10 @@
+URGENT: High-value payment received
+
+A client just transferred $15,000 to our account for Project Alpha. 
+Please:
+1. Verify the transaction in our bank records
+2. Send a professional thank-you email to client@company.com
+3. Update the project budget tracker
+4. Notify the finance team
+
+This requires approval before sending the email.
