@@ -1,0 +1,2 @@
+# This directory is watched by watcher_filesystem.py
+# Drop files here to trigger task creation in /Needs_Action

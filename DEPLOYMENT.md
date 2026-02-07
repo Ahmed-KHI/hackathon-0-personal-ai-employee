@@ -1,52 +1,346 @@
-# DEPLOYMENT GUIDE - Personal AI Employee
+# Deployment Guide - Hackathon 0 Personal AI Employee
 
-## Bronze Tier Deployment (MVP)
+**Tier**: Silver (Bronze + Gmail + PM2)  
+**Status**: Production-ready  
+**Updated**: February 7, 2026
 
-### Prerequisites
+---
 
-- Python 3.11+
-- Git
-- Obsidian (optional, for vault visualization)
-- Code editor (VS Code recommended)
-
-### Step 1: Clone and Setup
+## Quick Start (Bronze Tier)
 
 ```bash
-# Clone repository (or use existing directory)
-cd "i:\hackathon 0 personal ai employee"
-
-# Create virtual environment
-python -m venv venv
-
-# Activate virtual environment
-# Windows:
-venv\Scripts\activate
-# Mac/Linux:
-# source venv/bin/activate
-
-# Install dependencies
+# 1. Install prerequisites
+npm install -g @anthropic-ai/claude-code pm2
 pip install -r requirements.txt
+
+# 2. Configure environment
+cp .env.example .env
+# Edit .env with your credentials
+
+# 3. Create watch directory
+mkdir watch_inbox
+
+# 4. Test filesystem watcher
+python watcher_filesystem.py &
+echo "Test task" > watch_inbox/test.txt
+
+# 5. Run orchestrator
+python orchestrator_claude.py
+
+# 6. Check results
+ls obsidian_vault/Needs_Action
+ls obsidian_vault/Plans
+ls obsidian_vault/Done
 ```
 
-### Step 2: Configure Environment
+---
+
+## Silver Tier Deployment (24/7 Operation)
+
+### 1. Configure Gmail API
 
 ```bash
-# Copy example environment file
-copy .env.example .env
+# Download credentials from Google Cloud Console
+# Save to secrets/gmail_credentials.json
 
-# Edit .env with your settings
-notepad .env
+# First run triggers OAuth flow
+python watcher_gmail.py
+# Follow browser prompt to authorize
+# token.json will be created in secrets/
 ```
 
-**Required for Bronze Tier**:
+### 2. Start PM2 Daemons
+
+```bash
+# Start all processes
+pm2 start ecosystem.config.js
+
+# View status
+pm2 status
+
+# View logs
+pm2 logs
+
+# Monitor in real-time
+pm2 monit
+
+# Save for auto-restart on reboot
+pm2 save
+pm2 startup
+```
+
+### 3. Verify Operation
+
+```bash
+# Check process status
+pm2 list
+
+# Drop test file
+echo "Urgent client request" > watch_inbox/urgent.txt
+
+# Watch logs for processing
+pm2 logs orchestrator --lines 50
+
+# Check vault folders
+ls obsidian_vault/Needs_Action
+ls obsidian_vault/Plans
+ls obsidian_vault/Done
+```
+
+---
+
+## Environment Configuration
+
+### Required Variables (.env)
+
 ```env
+# Core Settings
 VAULT_PATH=./obsidian_vault
-DASHBOARD_PATH=./obsidian_vault/Dashboard.md
+ENVIRONMENT=production
 LOG_LEVEL=INFO
-ENVIRONMENT=development
+
+# Claude Code (Anthropic)
+ANTHROPIC_API_KEY=sk-ant-api03-...
+
+# Gmail API (Silver Tier)
+GMAIL_CREDENTIALS_PATH=./secrets/gmail_credentials.json
+GMAIL_TOKEN_PATH=./secrets/gmail_token.json
+
+# Ralph Loop Protection
 RALPH_LOOP_MAX_ITERATIONS=50
-DEPLOYMENT_TIER=bronze
+
+# Deployment Tier
+DEPLOYMENT_TIER=silver
 ```
+
+---
+
+## Architecture Overview
+
+```
+Watchers → /Needs_Action → Orchestrator → Claude Code → /Plans → /Done
+           (Markdown)      (claim-by-move)  (Reasoning)   (Actions)
+
+HITL Flow:
+/Pending_Approval → Human moves to → /Approved or /Rejected
+                                   → Orchestrator executes or logs
+```
+
+---
+
+## Process Management
+
+### PM2 Commands
+
+```bash
+# Start all
+pm2 start ecosystem.config.js
+
+# Stop all
+pm2 stop all
+
+# Restart all
+pm2 restart all
+
+# Delete all
+pm2 delete all
+
+# View specific process
+pm2 show orchestrator
+pm2 show watcher-filesystem
+pm2 show watcher-gmail
+
+# View logs
+pm2 logs --lines 100
+pm2 logs orchestrator --lines 50
+```
+
+---
+
+## Monitoring & Health Checks
+
+### Check System Status
+
+```bash
+# Process status
+pm2 status
+
+# Recent logs
+pm2 logs --lines 50
+
+# CPU/Memory usage
+pm2 monit
+
+# Restart count (should be low)
+pm2 list | grep restart
+```
+
+### Check Vault Folders
+
+```bash
+# Pending tasks
+ls -la obsidian_vault/Needs_Action
+
+# Active task (should be 0 or 1)
+ls -la obsidian_vault/In_Progress
+
+# Completed today
+ls -la obsidian_vault/Done
+
+# Audit logs
+cat obsidian_vault/Logs/$(date +%Y-%m-%d).json | jq .
+```
+
+---
+
+## Troubleshooting
+
+### Orchestrator Not Starting
+
+```bash
+# Check Python environment
+which python
+python --version
+
+# Check Claude CLI
+claude --version
+
+# Test manually
+python orchestrator_claude.py
+```
+
+### Watchers Not Creating Tasks
+
+```bash
+# Check watch_inbox exists
+ls watch_inbox
+
+# Check file permissions
+ls -la watch_inbox
+
+# Test watcher manually
+python watcher_filesystem.py
+echo "test" > watch_inbox/test.txt
+ls obsidian_vault/Needs_Action
+```
+
+### Gmail Watcher Authentication Errors
+
+```bash
+# Delete old token
+rm secrets/gmail_token.json
+
+# Re-authenticate
+python watcher_gmail.py
+# Follow browser prompt
+```
+
+### PM2 Processes Crash Loop
+
+```bash
+# View error logs
+pm2 logs --err --lines 100
+
+# Check specific process
+pm2 show orchestrator
+
+# Restart with fresh state
+pm2 delete all
+pm2 start ecosystem.config.js
+```
+
+---
+
+## Security Checklist
+
+- [ ] `.env` file not committed to Git
+- [ ] `secrets/` directory in .gitignore
+- [ ] Gmail OAuth token secured (secrets/gmail_token.json)
+- [ ] Anthropic API key rotated regularly
+- [ ] Audit logs reviewed weekly (/Logs/*.json)
+- [ ] HITL approvals enforced for sensitive actions
+- [ ] Dashboard.md only written by orchestrator
+
+---
+
+## Backup & Recovery
+
+### Backup Vault
+
+```bash
+# Daily backup
+tar -czf "backups/vault-$(date +%Y%m%d).tar.gz" obsidian_vault/
+
+# Automated backup (add to cron)
+0 2 * * * tar -czf "/path/to/backups/vault-$(date +\%Y\%m\%d).tar.gz" /path/to/obsidian_vault/
+```
+
+### Restore Vault
+
+```bash
+# Stop all processes
+pm2 stop all
+
+# Restore from backup
+tar -xzf backups/vault-20260207.tar.gz
+
+# Restart
+pm2 restart all
+```
+
+---
+
+## Upgrading Tiers
+
+### Bronze → Silver
+
+1. Install Gmail API credentials
+2. Configure watcher_gmail.py
+3. Update ecosystem.config.js to include watcher-gmail
+4. `pm2 restart all`
+
+### Silver → Gold
+
+1. Install Odoo/Slack integrations
+2. Add corresponding MCP servers
+3. Update agent skills for new actions
+4. Test HITL workflows
+
+---
+
+## Production Deployment (Cloud VM)
+
+### Oracle Cloud / AWS / GCP
+
+```bash
+# 1. SSH into VM
+ssh user@your-vm-ip
+
+# 2. Clone and setup
+git clone https://github.com/Ahmed-KHI/hackathon-0-personal-ai-employee.git
+cd hackathon-0-personal-ai-employee
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# 3. Configure environment
+cp .env.example .env
+nano .env  # Add production credentials
+
+# 4. Start PM2
+pm2 start ecosystem.config.js
+pm2 save
+pm2 startup
+
+# 5. Configure firewall (if exposing web interface)
+sudo ufw allow 22/tcp  # SSH
+sudo ufw enable
+```
+
+---
+
+**Status**: Silver tier operational  
+**Next**: Gold tier (Odoo + Slack integrations)
 
 **Optional (Silver tier)**:
 - ANTHROPIC_API_KEY (for Claude Code reasoning)

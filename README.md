@@ -12,10 +12,10 @@ This is a **production-grade autonomous AI employee** capable of operating as a 
 2. **Perception → Reasoning → Action**: Event-driven autonomous operation
 3. **Claude Code as Reasoning Engine**: Single LLM orchestrating all intelligence
 4. **Agent Skills**: All intelligence encoded as Markdown files
-5. **Human-in-the-Loop (HITL)**: File-based approvals for sensitive operations
-6. **Ralph Wiggum Stop-Hook**: Prevents infinite loops and runaway costs
-7. **Zero Credentials in Code**: All secrets externalized
-8. **Immutable Audit Trail**: Every action logged for compliance
+5. **Human-in-the-Loop (HITL)**: Folder-based approvals for sensitive operations
+6. **Ralph Wiggum Stop-Hook**: Prevents infinite loops by checking for completion promise
+7. **Zero Credentials in Code**: All secrets externalized to .env
+8. **Immutable Audit Trail**: Every action logged to /Logs/YYYY-MM-DD.json
 
 ---
 
@@ -23,63 +23,80 @@ This is a **production-grade autonomous AI employee** capable of operating as a 
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    OBSIDIAN VAULT (Single Source of Truth)   │
-│  ┌────────────────┐  ┌──────────────┐  ┌─────────────────┐  │
-│  │  Dashboard.md  │  │  Handbook.md │  │ Business_Goals  │  │
-│  │ (Single Writer)│  │              │  │                 │  │
-│  └────────────────┘  └──────────────┘  └─────────────────┘  │
+│              OBSIDIAN VAULT (Single Source of Truth)        │
+│  ┌────────────────┐  ┌──────────────┐  ┌─────────────────┐│
+│  │  Dashboard.md  │  │  Handbook.md │  │ Business_Goals  ││
+│  │ (Single Writer)│  │              │  │                 ││
+│  └────────────────┘  └──────────────┘  └─────────────────┘│
+│                                                              │
+│  Folders (Claim-by-Move Pattern):                           │
+│  /Needs_Action → /In_Progress → /Plans → /Done              │
+│  /Pending_Approval → /Approved or /Rejected                 │
+│  /Logs (Immutable audit trail - YYYY-MM-DD.json)            │
 └─────────────────────────────────────────────────────────────┘
                               ▲
-                              │ (write only)
+                              │ (orchestrator writes only)
                               │
 ┌─────────────────────────────┴───────────────────────────────┐
-│                      ORCHESTRATOR                            │
-│  - Coordinates watcher → reasoning → action                  │
-│  - Enforces claim-by-move (single active task)               │
-│  - Manages Ralph Loop stop-hook                              │
+│                 ORCHESTRATOR_CLAUDE.PY                       │
+│  - Scans /Needs_Action for tasks                            │
+│  - Claim-by-move: first to move file owns it                │
+│  - Triggers Claude Code CLI with vault context              │
+│  - Ralph stop-hook: checks <promise>TASK_COMPLETE</promise> │
+│  - Processes HITL approvals (/Approved, /Rejected)          │
+│  - Executes actions via MCP servers                         │
+│  - Generates Monday CEO Briefing (scheduled 7 AM)           │
 └─────────────────────────────┬───────────────────────────────┘
                               │
         ┌─────────────────────┼─────────────────────┐
         ▼                     ▼                     ▼
 ┌──────────────┐      ┌──────────────┐      ┌──────────────┐
-│   WATCHERS   │      │ TASK QUEUE   │      │ CLAUDE CODE  │
-│              │      │              │      │  (Reasoning)  │
-│ - Gmail      │──────▶ - Inbox      │──────▶              │
-│ - WhatsApp   │      │ - Pending    │      │ Agent Skills │
-│ - Filesystem │      │ - Approvals  │      │ (Markdown)   │
-│ - Finance    │      │ - Completed  │      │              │
-└──────────────┘      └──────────────┘      └──────┬───────┘
-                                                    │
-                                                    ▼
-                                            ┌──────────────┐
-                                            │ MCP SERVERS  │
-                                            │              │
-                                            │ - Email      │
-                                            │ - Browser    │
-                                            │ - Calendar   │
-                                            │ - Slack      │
-                                            │ - Odoo/ERP   │
-                                            └──────────────┘
-```
-
----
-
-## Deployment Tiers
-
-### 🥉 Bronze (MVP - Local Development)
-- **Goal**: Prove autonomous perception → reasoning → action
-- **Watchers**: Filesystem only
-- **MCP**: Stub implementations
-- **Human-in-the-Loop**: Manual file approval
-- **Timeline**: Week 1-2
+│   WATCHERS   │      │   FOLDERS    │      │ CLAUDE CODE  │
+│  (Python)    │      │              │      │  (Reasoning)  │
+│              │      │ Needs_Action │──────▶              │
+│ - Gmail      │──────▶ In_Progress  │      │ Reads Skills │
+│ - Filesystem │      │ Plans        │      │ Generates    │
+│              │      │ Done         │      │ Plan.md      │
+│              │      │ Pending_     │      │              │
+│              │      │  Approval    │      │ Returns      │
+└──────────────┘      └──────────────┘      │ completion   │
+                                            └──────┬───────┘
+                                                   │
+                                                   ▼
+                                           ┌──────────────┐
+                                           │ MCP SERVERS  │
+                                           │  (Actions)   │
+                                           │              │
+                                           │ - Email      │
+                           watcher (watch_inbox/)
+- **MCP**: Email MCP with Gmail API (real implementation)
+- **Orchestrator**: Claude Code CLI integration working
+- **Agent Skills**: All intelligence in Markdown files
+- **HITL**: Folder-based approvals (/Pending_Approval → /Approved|/Rejected)
+- **Status**: ✅ **COMPLETE** - All tests passing
 
 ### 🥈 Silver (Real Integrations)
 - **Goal**: Production-ready for personal use
-- **Watchers**: Gmail, WhatsApp (Playwright), Finance API
-- **MCP**: Real Gmail, Calendar, Browser automation
-- **HITL**: Automated approval workflows
-- **Timeline**: Week 3-4
+- **Watchers**: + Gmail watcher (Gmail API), WhatsApp (Playwright)
+- **MCP**: + Calendar, Browser automation
+- **HITL**: Automated approval notifications
+- **Process Management**: PM2 daemon mode for 24/7 operation
+- **CEO Briefing**: Automated Monday morning reports
+- **Status**: ✅ **COMPLETE** - Gmail watcher active, PM2 configured
 
+### 🥇 Gold (Multi-User + ERP)
+- **Goal**: Team/business deployment
+- **Watchers**: + Slack webhooks, Odoo event listeners
+- **MCP**: + Odoo ERP integration, Slack bots
+- **HITL**: Role-based approval chains
+- **Status**: 🔄 **IN PROGRESS** - Odoo/Slack MCPs stubbed
+
+### 💎 Platinum (Enterprise Scale)
+- **Goal**: Multi-tenant, compliance-ready
+- **Features**: Encrypted vaults, SOC2 audit logs, RBAC
+- **Deployment**: Docker/Kubernetes, cloud VM
+- **Work-zone**: Cloud drafts, Local approves
+- **Status**: 📋 **PLANNED**
 ### 🥇 Gold (Multi-User + ERP)
 - **Goal**: Team/business deployment
 - **Watchers**: + Slack, Odoo webhooks
@@ -98,41 +115,52 @@ This is a **production-grade autonomous AI employee** capable of operating as a 
 ## Directory Structure
 
 ```
-personal-ai-employee/
-├── .github/
-│   └── copilot-instructions.md       # Architectural constraints for AI
-├── obsidian_vault/                   # LOCAL-FIRST SINGLE SOURCE OF TRUTH
-│   ├── Dashboard.md                  # Single-writer task dashboard
-│   ├── Company_Handbook.md           # Business context
+personal-ai-employee/ & rules
 │   ├── Business_Goals.md             # Strategic objectives
 │   ├── agent_skills/                 # Intelligence as Markdown
-│   │   ├── email_skills.md
-│   │   ├── finance_skills.md
-│   │   ├── social_skills.md
-│   │   ├── planning_skills.md
-│   │   └── approval_skills.md
-│   └── .obsidian/                    # (gitignored except plugins)
-├── watchers/                         # Event perception layer
+│   │   ├── email_skills.md           # Email response patterns
+│   │   ├── finance_skills.md         # Financial analysis rules
+│   │   ├── social_skills.md          # Social media logic
+│   │   ├── planning_skills.md        # Task planning templates
+│   │   └── approval_skills.md        # HITL decision criteria
+│   ├── Needs_Action/                 # New tasks from watchers
+│   ├── In_Progress/                  # Currently claimed task
+│   ├── Plans/                        # Plan.md files from Claude
+│   ├── Done/                         # Completed tasks
+│   ├── Pending_Approval/             # Awaiting human decision
+│   ├── Approved/                     # Human approved actions
+│   ├── Rejected/                     # Human rejected actions
+│   ├── Logs/                         # Audit trail (YYYY-MM-DD.json)
+│   ├── Briefings/                    # Monday CEO summaries
+│   └── Accounting/                   # Financial records
+├── watchers/                         # OLD watchers (deprecated)
 │   ├── base_watcher.py
 │   ├── gmail_watcher.py
 │   ├── whatsapp_watcher.py
 │   ├── filesystem_watcher.py
 │   └── finance_watcher.py
-├── orchestration/                    # Control plane
-│   ├── orchestrator.py               # Main coordination loop
-│   ├── watchdog.py                   # Health monitoring
-│   ├── retry_handler.py              # Failure recovery
-│   ├── ralph_loop.py                 # Stop-hook protection
-│   └── audit_logger.py               # Immutable compliance log
+├── watcher_filesystem.py             # NEW: Compliant filesystem watcher
+├── watcher_gmail.py                  # NEW: Compliant Gmail watcher
+├── orchestration/                    # OLD orchestrator (deprecated)
+│   ├── orchestrator.py               # (OpenAI-based, not used)
+│   ├── watchdog.py
+│   ├── retry_handler.py
+│   ├── ralph_loop.py
+│   └── audit_logger.py
+├── orchestrator_claude.py            # NEW: Claude Code orchestrator
+├── ecosystem.config.js               # PM2 process management config
+├── claude_desktop_config.json        # MCP server configuration
 ├── mcp_servers/                      # External action layer
 │   ├── email_server/
+│   │   └── email_mcp.py              # Gmail API real implementation
 │   ├── browser_server/
 │   ├── calendar_server/
 │   ├── slack_server/
 │   └── odoo_server/
-├── task_queue/                       # Work inbox
-│   ├── inbox/
-│   ├── pending/
+├── task_queue/                       # OLD queue (deprecated, use vault folders)
+├── audit_logs/                       # Legacy audit logs
+├── secrets/                          # (gitignored)
+├── logs/                             # PM2 process logsending/
 │   ├── approvals/
 │   └── completed/
 ├── audit_logs/                       # Immutable audit trail
@@ -262,18 +290,23 @@ cp .env.example .env
 
 ### Running (Bronze Tier)
 ```bash
-# Start orchestrator
-python orchestration/orchestrator.py
+# StSetup & Testing
+- **[.env.example](.env.example)** - Environment configuration template
+- **[ecosystem.config.js](ecosystem.config.js)** - PM2 process management config
+- **[claude_desktop_config.json](claude_desktop_config.json)** - MCP server configuration
 
-# In another terminal, trigger a test event
-echo '{"type": "test", "message": "Hello AI Employee"}' > task_queue/inbox/test_task.json
-```
+### Architecture & Design
+- **[Copilot Instructions](.github/copilot-instructions.md)** - Authoritative architectural constraints
+- **[Deployment Guide](DEPLOYMENT.md)** - Production deployment instructions
+- **[Operations Runbook](production/OPERATIONS_RUNBOOK.md)** - Complete operational procedures
 
----
+### Integration Guides (Silver/Gold Tier)
+- **[Gmail Integration](docs/GMAIL_INTEGRATION_GUIDE.md)** - Gmail API setup
+- **[Plaid Finance Integration](docs/PLAID_INTEGRATION_GUIDE.md)** - Bank account monitoring
+- **[Silver Tier Testing](docs/SILVER_TIER_TESTING.md)** - End-to-end test procedures
 
-## Documentation
-
-### Deployment & Production
+### Project Status
+- **[Project Complete Report](PROJECT_COMPLETE.md)** - Development history &
 - **[Operations Runbook](production/OPERATIONS_RUNBOOK.md)** - Complete operational procedures for production deployment
 - **[Deployment Guide](DEPLOYMENT.md)** - Step-by-step deployment instructions
 - **[Production Scripts](production/)** - Windows Service installers, backup system, monitoring tools
@@ -285,48 +318,65 @@ echo '{"type": "test", "message": "Hello AI Employee"}' > task_queue/inbox/test_
 
 ### Project Status
 - **[Project Complete Report](PROJECT_COMPLETE.md)** - Full development history, live testing results, performance metrics
+ ✅
+- Follow Hackathon 0 specification exactly
+- Use Claude Code CLI as reasoning engine
+- Write all AI logic as Agent Skills (Markdown)
+- Use folder-based HITL workflow (/Pending_Approval → /Approved|/Rejected)
+- Log every action to /Logs/YYYY-MM-DD.json
+- Test with claim-by-move pattern (single active task)
+- Use MCP servers for all external actions
 
----
-
-## Development Guidelines
-
-### DO
-- Follow existing patterns exactly
-- Add agent skills as Markdown
-- Log every action
-- Test HITL workflows
-- Document tier-specific features
-
-### DO NOT
+### DO NOT ❌
+- Replace Obsidian vault with database
+- Replace folder workflow with message queue
+- Use different LLM than Claude Code for reasoning
+- Bypass HITL approvals for sensitive actions
+- Skip audit logging
+- Allow multiple tasks in /In_Progress (claim-by-move rule)
+- Commit credentials or secrets
 - Simplify the architecture
 - Replace Obsidian with a database
 - Make Claude poll for work
-- Commit secrets
-- Skip audit logging
+- Commit secretClaude Code integration (compliance with Hackathon 0)
+- [x] Phase 4: Orchestrator with claim-by-move pattern
+- [x] Phase 5: Agent Skills as Markdown files
+- [x] Phase 6: Ralph Wiggum stop-hook (completion promise checking)
+- [x] Phase 7: Folder-based HITL workflow
+- [x] Phase 8: Real MCP server (Email with Gmail API)
+- [x] Phase 9: Gmail watcher integration
+- [x] Phase 10: PM2 process management for 24/7 operation
+- [x] Phase 11: Monday Morning CEO Briefing automation
+- [x] Phase 12: Immutable audit logging to /Logs
+- [x] **Silver Tier Complete** ✅
+- [ ] Phase 13: Slack integration (watcher + MCP)
+- [ ] Phase 14: Odoo ERP integration (Gold tier)
+- [ ] Phase 15: WhatsApp watcher (Playwright automation)
+- [ ] Phase 16: Calendar sync & meeting automation
+- [ ] Phase 17: Multi-tenant architecture (Platinum)
+- [ ] Phase 18: SOC2 compliance & encrypted vaults
 
----
-
-## Roadmap
-
-- [x] Phase 1: Repository structure & architecture
-- [x] Phase 2: Bronze tier (filesystem watcher)
-- [x] Phase 3: OpenAI integration (cost-effective LLM)
-- [x] Phase 4: Orchestration loop & agent skills
+**Current Status**: Silver Tier deployment-ready, testing in progress
 - [x] Phase 5: MCP server stubs
 - [x] Phase 6: Test validation framework
 - [x] Phase 7: Ralph Loop protection
 - [x] Phase 8: Watchers (Gmail, WhatsApp, Finance)
 - [x] Phase 9: Live testing & bug fixes (10+ tasks, 100% success)
 - [x] Phase 10: Production hardening (Windows Services, backups, alerts)
-- [ ] Phase 11: Silver tier integration guides complete
-- [ ] Phase 12: Gold tier (Slack, Odoo webhooks, Calendar sync)
-- [ ] Phase 13: Platinum tier (Multi-tenant, SOC2 compliance)
+- [ ] Phas**Hackathon 0** submission project demonstrating autonomous AI employee architecture. Fork and adapt as needed, but maintain core principles per `.github/copilot-instructions.md`:
+
+- **Local-first**: Obsidian vault as single source of truth
+- **Claude Code**: Only LLM for reasoning
+- **Agent Skills**: All intelligence in Markdown
+- **Folder-based HITL**: /Pending_Approval → /Approved|/Rejected
+- **Claim-by-move**: Single active task only
+- **Immutable audit**: Every action logged
 
 ---
 
-## License
-
-MIT
+**Built for Hackathon 0 - February 2026**  
+**Tier**: Silver (Bronze + Gmail + PM2)  
+**Status**: Production-ready for personal use
 
 ## Contributing
 

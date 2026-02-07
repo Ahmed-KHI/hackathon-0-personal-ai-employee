@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "email": {
+      "command": "python",
+      "args": ["mcp_servers/email_server/email_mcp.py"],
+      "env": {}
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "obsidian_vault"],
+      "env": {}
+    }
+  }
+}

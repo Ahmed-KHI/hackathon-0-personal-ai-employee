@@ -12,6 +12,7 @@ openai==1.12.0           # OpenAI API (GPT-4, etc.)
 
 # Watchers
 watchdog==4.0.0
+schedule==1.2.0              # For Monday CEO Briefing automation
 google-auth==2.27.0
 google-auth-oauthlib==1.2.0
 google-auth-httplib2==0.2.0
@@ -26,7 +27,7 @@ aiofiles==23.2.1
 asyncio==3.4.3
 
 # MCP Protocol
-mcp==0.9.0
+mcp==1.26.0
 
 # Logging & Monitoring
 structlog==24.1.0
