@@ -49,6 +49,39 @@ module.exports = {
       watch: false,
       error_file: './logs/watcher_linkedin_error.log',
       out_file: './logs/watcher_linkedin_out.log'
+    },
+    {
+      name: 'watcher-facebook',
+      script: 'watcher_facebook.py',
+      interpreter: 'python',
+      cwd: './',
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      error_file: './logs/watcher_facebook_error.log',
+      out_file: './logs/watcher_facebook_out.log'
+    },
+    {
+      name: 'watcher-instagram',
+      script: 'watcher_instagram.py',
+      interpreter: 'python',
+      cwd: './',
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      error_file: './logs/watcher_instagram_error.log',
+      out_file: './logs/watcher_instagram_out.log'
+    },
+    {
+      name: 'watcher-twitter',
+      script: 'watcher_twitter.py',
+      interpreter: 'python',
+      cwd: './',
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      error_file: './logs/watcher_twitter_error.log',
+      out_file: './logs/watcher_twitter_out.log'
     }
   ]
 };
