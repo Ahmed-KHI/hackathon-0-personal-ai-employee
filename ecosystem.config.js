@@ -82,6 +82,17 @@ module.exports = {
       watch: false,
       error_file: './logs/watcher_twitter_error.log',
       out_file: './logs/watcher_twitter_out.log'
+    },
+    {
+      name: 'watcher-odoo',
+      script: 'watcher_odoo.py',
+      interpreter: 'python',
+      cwd: './',
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      error_file: './logs/watcher_odoo_error.log',
+      out_file: './logs/watcher_odoo_out.log'
     }
   ]
 };
