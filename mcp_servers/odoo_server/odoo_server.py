@@ -36,6 +36,7 @@ class OdooServer:
         
         self.uid = None
         self.session_id = None
+        self.session = requests.Session()  # Persistent session for cookies
         
         # Authenticate on init
         self._authenticate()
@@ -66,7 +67,7 @@ class OdooServer:
                 'id': 1
             }
             
-            response = requests.post(url, json=payload)
+            response = self.session.post(url, json=payload)
             response.raise_for_status()
             
             result = response.json()
@@ -107,11 +108,10 @@ class OdooServer:
             'Content-Type': 'application/json'
         }
         
-        if self.session_id:
-            headers['Cookie'] = f'session_id={self.session_id}'
+        # Session cookies are handled automatically by self.session
         
         try:
-            response = requests.post(url, json=payload, headers=headers)
+            response = self.session.post(url, json=payload, headers=headers)
             response.raise_for_status()
             
             result = response.json()
@@ -165,14 +165,22 @@ class OdooServer:
                 })]
             }
             
-            invoice_id = self._call_odoo('account.move', 'create', [[invoice_vals]])
+            invoice_id = self._call_odoo('account.move', 'create', [invoice_vals])
+            
+            # Extract ID if returned as array
+            if isinstance(invoice_id, list):
+                invoice_id = invoice_id[0] if invoice_id else None
+            
+            # Post the invoice (validate it)
+            if invoice_id:
+                self._call_odoo('account.move', 'action_post', [[invoice_id]])
             
             return {
                 'status': 'success',
                 'invoice_id': invoice_id,
                 'partner': partner_name,
                 'amount': amount,
-                'message': f'Invoice created for {partner_name}',
+                'message': f'Invoice created and posted for {partner_name}',
                 'timestamp': datetime.now().isoformat()
             }
         
@@ -224,14 +232,22 @@ class OdooServer:
                 })]
             }
             
-            bill_id = self._call_odoo('account.move', 'create', [[bill_vals]])
+            bill_id = self._call_odoo('account.move', 'create', [bill_vals])
+            
+            # Extract ID if returned as array
+            if isinstance(bill_id, list):
+                bill_id = bill_id[0] if bill_id else None
+            
+            # Post the bill (validate it)
+            if bill_id:
+                self._call_odoo('account.move', 'action_post', [[bill_id]])
             
             return {
                 'status': 'success',
                 'bill_id': bill_id,
                 'vendor': vendor_name,
                 'amount': amount,
-                'message': f'Bill created for {vendor_name}',
+                'message': f'Bill created and posted for {vendor_name}',
                 'timestamp': datetime.now().isoformat()
             }
         
@@ -268,6 +284,13 @@ class OdooServer:
             }
         
         try:
+            # Ensure invoice_id is an integer
+            if isinstance(invoice_id, list):
+                invoice_id = invoice_id[0] if invoice_id else None
+            
+            if not invoice_id:
+                raise Exception("Invalid invoice_id")
+            
             payment_vals = {
                 'amount': amount,
                 'payment_type': 'inbound',  # Receiving payment
@@ -276,10 +299,15 @@ class OdooServer:
                 'invoice_ids': [(4, invoice_id)]  # Link to invoice
             }
             
-            payment_id = self._call_odoo('account.payment', 'create', [[payment_vals]])
+            payment_id = self._call_odoo('account.payment', 'create', [payment_vals])
+            
+            # Extract ID if returned as array
+            if isinstance(payment_id, list):
+                payment_id = payment_id[0] if payment_id else None
             
             # Post payment
-            self._call_odoo('account.payment', 'action_post', [[payment_id]])
+            if payment_id:
+                self._call_odoo('account.payment', 'action_post', [[payment_id]])
             
             return {
                 'status': 'success',
@@ -456,14 +484,14 @@ class OdooServer:
                 'res.partner',
                 'read',
                 [[partner_id]],
-                {'fields': ['name', 'debit', 'credit', 'total_due']}
+                {'fields': ['name', 'debit', 'credit']}
             )[0]
             
             return {
                 'status': 'success',
                 'partner': partner['name'],
-                'receivable': partner.get('total_due', 0),  # What they owe us
-                'payable': partner.get('credit', 0) - partner.get('debit', 0),
+                'receivable': partner.get('debit', 0),  # What they owe us
+                'payable': partner.get('credit', 0),  # What we owe them
                 'timestamp': datetime.now().isoformat()
             }
         
@@ -485,7 +513,7 @@ class OdooServer:
             {'limit': 1}
         )
         
-        if partner_ids:
+        if partner_ids and len(partner_ids) > 0:
             return partner_ids[0]
         
         # Create new partner
@@ -495,7 +523,7 @@ class OdooServer:
             'supplier_rank': 1 if is_vendor else 0
         }
         
-        partner_id = self._call_odoo('res.partner', 'create', [[partner_vals]])
+        partner_id = self._call_odoo('res.partner', 'create', [partner_vals])
         return partner_id
     
     def process_action(self, action: str, params: Dict[str, Any]) -> Dict:
