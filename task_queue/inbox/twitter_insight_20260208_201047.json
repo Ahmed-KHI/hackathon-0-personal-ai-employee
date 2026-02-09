@@ -1,0 +1,12 @@
+{
+  "task_id": "twitter_insight_20260208_201047",
+  "task_type": "twitter_action",
+  "trigger": "insight",
+  "priority": "medium",
+  "created_at": "2026-02-08T20:10:47.369206",
+  "content": {
+    "insight_text": "TASK_financial_review",
+    "context": "---\ntype: financial_analysis\npriority: medium\n---\n\n# monthly financial review\n\nplease analyze our business performance for january 2026:\n\n## required analysis\n1. review recent transactions (check business_goals.md for targets)\n2. calculate revenue vs. expenses\n3. identify top 3 expense categories\n4. compare against q1 revenue target ($50,000)\n\n## deliverables\n- summary report in /briefings/\n- recommendations for cost reduction\n- action items for improving cash flow\n\nnote: assume hypothetical dat"
+  },
+  "instructions": "Review obsidian_vault/agent_skills/twitter_skills.md for posting guidelines.\n\nTask: Share industry insight or tip on Twitter\n\nInsight: TASK_financial_review\nContext: ---\ntype: financial_analysis\npriority: medium\n---\n\n# monthly financial review\n\nplease analyze our business performance for january 2026:\n\n## required analysis\n1. review recent transactions (check business_goals.md for targets)\n2. calculate revenue vs. expenses\n3. identify top 3 expense categories\n4. compare against q1 revenue target ($50,000)\n\n## deliverables\n- summary report in /briefings/\n- recommendations for cost reduction\n- action items for improving cash flow\n\nnote: assume hypothetical dat\n\nAction Steps:\n1. Identify key lesson or observation\n2. Write as actionable tip or thought-provoking question\n3. Consider thread format if >280 characters (see twitter_skills.md)\n4. Add value: \"Here's why this matters...\"\n5. Use 2-3 hashtags (industry + topic)\n6. Include CTA: \"What's worked for you?\"\n7. Auto-approve if educational/neutral\n8. Post during peak times (see twitter_skills.md)\n\nTweet Formats:\n- Tip: \"Pro tip: [Action]. Result: [Benefit]. #[Industry]Tip\"\n- Observation: \"[Trend noticed]. [Why it matters]. Thoughts?\"\n- Lesson: \"Learned: [What]. Changed our approach. [How].\"\n"
+}

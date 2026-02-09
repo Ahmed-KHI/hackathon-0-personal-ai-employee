@@ -1,0 +1,13 @@
+{
+  "task_id": "odoo_create_invoice_20260208_200301",
+  "task_type": "odoo_action",
+  "trigger": "create_invoice",
+  "priority": "medium",
+  "created_at": "2026-02-08T20:03:01.420501",
+  "content": {
+    "project_name": "TASK_email_client_invoice",
+    "client_name": "Unknown Client",
+    "context": "---\ntype: email_response\npriority: high\nrequires_approval: true\n---\n\n# email response request\n\nfrom: important.client@example.com\nsubject: invoice payment question\n\nclient is asking about invoice #inv-2024-001 for $2,500. they want to know:\n1. payment due date\n2. accepted payment methods\n3. late payment penalties\n\nplease draft a professional email response that:\n- is polite and helpful\n- provides clear payment instructions\n- mentions our 30-day payment terms\n- includes our bank transfer details\n"
+  },
+  "instructions": "Review obsidian_vault/agent_skills/odoo_skills.md for Odoo operations.\n\nTask: Create customer invoice in Odoo\n\nProject: TASK_email_client_invoice\nClient: Unknown Client\nContext: ---\ntype: email_response\npriority: high\nrequires_approval: true\n---\n\n# email response request\n\nfrom: important.client@example.com\nsubject: invoice payment question\n\nclient is asking about invoice #inv-2024-001 for $2,500. they want to know:\n1. payment due date\n2. accepted payment methods\n3. late payment penalties\n\nplease draft a professional email response that:\n- is polite and helpful\n- provides clear payment instructions\n- mentions our 30-day payment terms\n- includes our bank transfer details\n\n\nAction Steps:\n1. Extract invoice details:\n   - Customer name (from project or context)\n   - Invoice amount (from contract or estimate)\n   - Service description\n   - Payment terms\n2. Check if customer exists in Odoo (use get_partner_balance to verify)\n3. Create invoice via odoo_server.py:\n   - partner_name: [Customer name]\n   - amount: [Invoice amount]\n   - description: [Service description]\n4. If HITL required (amount > $5000), move to /Needs_Approval/\n5. If auto-approved, create invoice and log result\n6. Update Business_Goals.md with \"Invoice INV-XXX created for [Client]\"\n\nInvoice Details Format:\n- Partner: [Company name or individual]\n- Amount: [Numeric value]\n- Description: [Brief service description]\n- Due Date: Net 30 (30 days from invoice date)\n"
+}

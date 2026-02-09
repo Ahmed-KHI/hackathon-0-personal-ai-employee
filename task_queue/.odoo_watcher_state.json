@@ -1,0 +1,29 @@
+{
+  "processed_items": [
+    "milestone_finance:- **Burn Rate**: $[X]/month",
+    "milestone_finance:- **API Costs**: <$[X]/month",
+    "done_invoice:FILE_invoice_generation.txt.md",
+    "milestone_finance:- **Net Savings**: $[X]/month",
+    "milestone_finance:| Operations | $[X] | $[X] | $[X] |",
+    "milestone_finance:| AI/Automation | $[X] | $[X] | $[X] |",
+    "milestone_finance:- **Invoice Processing Time**: [X] days (Target: <",
+    "milestone_finance:| **Total** | **$[X]** | **$[X]** | **$[X]** |",
+    "milestone_finance:- **Manual Labor Reduction**: $[X]/month",
+    "milestone_finance:- **Lifetime Value (LTV)**: $[X]",
+    "milestone_finance:- [ ] Upsell [X] existing clients",
+    "milestone_finance:- Revenue this week: $[X]",
+    "done_invoice:FILE_urgent_payment.txt.md",
+    "milestone_finance:- [ ] Achieve $[X] ARR milestone",
+    "milestone_finance:- **Customer Acquisition Cost (CAC)**: $[X]",
+    "milestone_finance:| Engineering | $[X] | $[X] | $[X] |",
+    "milestone_finance:2. **Customer Acquisition**: Onboard [X] new clien",
+    "milestone_finance:- Third-party integrations: $[X]/month",
+    "milestone_finance:- Claude API usage: $[X]/month",
+    "milestone_finance:- MCP server hosting: $[X]/month",
+    "milestone_finance:- [ ] Close $[X] in new contracts",
+    "done_invoice:TASK_email_client_invoice.md",
+    "milestone_finance:| Sales & Marketing | $[X] | $[X] | $[X] |",
+    "done_invoice:TASK_business_improvement.md"
+  ],
+  "last_updated": "2026-02-08T20:03:01.474609"
+}

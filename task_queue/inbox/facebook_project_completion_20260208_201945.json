@@ -1,0 +1,13 @@
+{
+  "task_id": "facebook_project_completion_20260208_201945",
+  "task_type": "facebook_action",
+  "trigger": "project_completion",
+  "priority": "medium",
+  "created_at": "2026-02-08T20:19:45.843666",
+  "content": {
+    "project_file": "TASK_website_project.md",
+    "content_preview": "---\ntype: project_planning\npriority: high\n---\n\n# Project: Website Launch\n\nWe need to launch a new company website by March 15, 2026.\n\n## Requirements\n- Modern, responsive design\n- Contact form integration\n- Blog section\n- Portfolio/case studies page\n- About us & Services pages\n\n## Tasks\n1. Create de"
+  },
+  "instructions": "Review obsidian_vault/agent_skills/facebook_skills.md for posting guidelines.\n\nTask: Announce project completion on Facebook\n\nProject: TASK_website_project.md\nPreview: ---\ntype: project_planning\npriority: high\n---\n\n# Project: Website Launch\n\nWe need to launch a new company website by March 15, 2026.\n\n## Requirements\n- Modern, responsive design\n- Contact form integration\n- Blog section\n- Portfolio/case studies page\n- About us & Services pages\n\n## Tasks\n1. Create de\n\nAction Steps:\n1. Read full project details from /Done/TASK_website_project.md\n2. Create engaging Facebook post highlighting:\n   - Project achievement and outcome\n   - Business value delivered\n   - Customer impact (if applicable)\n   - Call-to-action (contact, learn more, etc.)\n3. Use professional yet relatable tone\n4. Include relevant hashtags (3-5)\n5. Keep within 300-500 characters for optimal engagement\n6. Requires HITL approval before posting (see facebook_skills.md)\n7. Post via facebook_server.py post_message\n8. Log result in audit trail\n\nPost Tone:\n- Professional but approachable\n- Emphasize value and impact\n- Gratitude to team/client where appropriate\n- Forward-looking statement\n- Community engagement element\n",
+  "requires_approval": true
+}

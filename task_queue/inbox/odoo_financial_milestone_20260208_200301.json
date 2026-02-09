@@ -1,0 +1,12 @@
+{
+  "task_id": "odoo_financial_milestone_20260208_200301",
+  "task_type": "odoo_action",
+  "trigger": "financial_milestone",
+  "priority": "medium",
+  "created_at": "2026-02-08T20:03:01.471608",
+  "content": {
+    "milestone_text": "- Revenue this week: $[X]",
+    "context": "\n## Financial Snapshot \ud83d\udcb0\n- Revenue this week: $[X]\n- Outstanding invoices: [Y]\n- Burn rate: On/Over/Under budget"
+  },
+  "instructions": "Review obsidian_vault/agent_skills/odoo_skills.md for Odoo operations.\n\nTask: Record financial milestone in Odoo\n\nMilestone: - Revenue this week: $[X]\nContext: \n## Financial Snapshot \ud83d\udcb0\n- Revenue this week: $[X]\n- Outstanding invoices: [Y]\n- Burn rate: On/Over/Under budget\n\nAction Steps:\n1. Identify milestone type:\n   - Revenue milestone: Create invoice or record payment\n   - Expense milestone: Create bill\n   - Account balance milestone: Get current balance for reporting\n2. Execute appropriate Odoo action based on type\n3. Verify transaction completed\n4. Update Business_Goals.md with financial summary\n5. If monthly/quarterly milestone, prepare financial report for CEO briefing\n\nCommon Milestones:\n- \"$X revenue achieved\": Record payments or create pending invoices\n- \"New client signed\": Create invoice for initial payment\n- \"Subscription renewed\": Create recurring invoice\n- \"Expense budget exceeded\": Get balance and flag for review\n"
+}

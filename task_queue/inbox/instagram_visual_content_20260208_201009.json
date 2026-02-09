@@ -1,0 +1,14 @@
+{
+  "task_id": "instagram_visual_content_20260208_201009",
+  "task_type": "instagram_action",
+  "trigger": "visual_content",
+  "priority": "medium",
+  "created_at": "2026-02-08T20:10:09.271198",
+  "content": {
+    "item_name": "TASK_website_project",
+    "item_path": "obsidian_vault\\Done\\TASK_website_project.md",
+    "category": "visual_showcase",
+    "description": "---\ntype: project_planning\npriority: high\n---\n\n# project: website launch\n\nwe need to launch a new company website by march 15, 2026.\n\n## requirements\n- modern, responsive design\n- contact form integration\n- blog section\n- portfolio/case studies page\n- about us & services pages\n\n## tasks\n1. create de"
+  },
+  "instructions": "Review obsidian_vault/agent_skills/instagram_skills.md for posting guidelines.\n\nTask: Post visual content to Instagram\n\nContent: TASK_website_project\nCategory: visual_showcase\nDescription: ---\ntype: project_planning\npriority: high\n---\n\n# project: website launch\n\nwe need to launch a new company website by march 15, 2026.\n\n## requirements\n- modern, responsive design\n- contact form integration\n- blog section\n- portfolio/case studies page\n- about us & services pages\n\n## tasks\n1. create de\n\nAction Steps:\n1. Extract image URL or visual asset from content\n2. Craft Instagram-optimized caption (125 chars or less for preview)\n3. Add relevant hashtags (15-20 hashtags, max 30)\n4. Determine if Story or Feed post is more appropriate\n5. Check HITL approval requirements (see instagram_skills.md)\n6. If approved, use instagram_server.py to post_photo or post_story\n7. Log result in audit log\n\nCaption Guidelines:\n- Lead with visual hook or key benefit\n- Use emojis (2-4 per caption)\n- Add call-to-action (tag someone, comment, visit link)\n- Keep it authentic and conversational\n- Place hashtags at end or in first comment\n\nVisual Requirements:\n- Square (1:1) or Vertical (4:5) preferred\n- Minimum 1080x1080 pixels\n- High contrast and clear subject\n- Brand-consistent filters/style\n"
+}

@@ -1,0 +1,12 @@
+{
+  "task_id": "twitter_quick_win_20260208_201047",
+  "task_type": "twitter_action",
+  "trigger": "quick_win",
+  "priority": "medium",
+  "created_at": "2026-02-08T20:10:47.351843",
+  "content": {
+    "win_description": "TASK_website_project",
+    "context": "---\ntype: project_planning\npriority: high\n---\n\n# project: website launch\n\nwe need to launch a new company website by march 15, 2026.\n\n## requirements\n- modern, responsive design\n- contact form integration\n- blog section\n- portfolio/case studies page\n- about us & services pages\n\n## tasks\n1. create detailed project timeline\n2. identify required resources (designer, developer, content writer)\n3. break down into weekly milestones\n4. estimate budget ($5,000-$10,000 range)\n5. identify potential risks "
+  },
+  "instructions": "Review obsidian_vault/agent_skills/twitter_skills.md for posting guidelines.\n\nTask: Share quick win on Twitter\n\nWin: TASK_website_project\nContext: ---\ntype: project_planning\npriority: high\n---\n\n# project: website launch\n\nwe need to launch a new company website by march 15, 2026.\n\n## requirements\n- modern, responsive design\n- contact form integration\n- blog section\n- portfolio/case studies page\n- about us & services pages\n\n## tasks\n1. create detailed project timeline\n2. identify required resources (designer, developer, content writer)\n3. break down into weekly milestones\n4. estimate budget ($5,000-$10,000 range)\n5. identify potential risks \n\nAction Steps:\n1. Identify core achievement (completed project, client win, milestone)\n2. Write celebratory but professional tweet\n3. Use 1 emoji opener (\ud83c\udf89 \u2705 \ud83d\ude80)\n4. Keep under 250 characters for easy RT\n5. Tag relevant people/companies if appropriate (max 2 tags)\n6. Add 2-3 hashtags\n7. Auto-approve if non-sensitive\n8. Post and engage with responses\n\nTweet Tone:\n- Excited but not boastful\n- Specific outcome, not vague \"great work\"\n- Give credit to team/client where appropriate\n- Invite engagement (\"What's your approach?\")\n"
+}

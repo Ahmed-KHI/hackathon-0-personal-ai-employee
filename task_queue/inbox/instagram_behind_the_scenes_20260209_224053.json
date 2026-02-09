@@ -1,0 +1,14 @@
+{
+  "task_id": "instagram_behind_the_scenes_20260209_224053",
+  "task_type": "instagram_action",
+  "trigger": "behind_the_scenes",
+  "priority": "medium",
+  "created_at": "2026-02-09T22:40:53.911795",
+  "content": {
+    "item_name": "Instagram_Integration_Complete",
+    "item_path": "obsidian_vault\\Done\\Instagram_Integration_Complete.md",
+    "category": "behind_the_scenes",
+    "description": "\ud83c\udf89 instagram integration complete! \n\nafter hours of setup challenges, we've successfully connected @muhammad.ahmed.3914 to the personal ai employee system.\n\nkey achievements:\n\u2705 converted to business account\n\u2705 connected to my test page\n\u2705 added as instagram tester\n\u2705 generated access token\n\u2705 api access "
+  },
+  "instructions": "Review obsidian_vault/agent_skills/instagram_skills.md for posting guidelines.\n\nTask: Share behind-the-scenes content on Instagram\n\nSubject: None\nContext: \n\nAction Steps:\n1. Select most authentic/candid photo from BTS content\n2. Write relatable caption showing process/journey\n3. Use BTS and educational hashtags\n4. Consider Stories format for ephemeral content\n5. Show tools, workspace, or team in action\n6. Auto-approve if positive/neutral (see instagram_skills.md)\n7. Post and engage with comments\n\nCaption Tone:\n- Authentic and human\n- Educational value (\"Here's how we...\")\n- Relatable struggles/wins\n- Conversational language\n- Invite questions/discussion\n"
+}
