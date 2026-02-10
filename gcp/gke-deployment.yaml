@@ -113,7 +113,7 @@ spec:
       serviceAccountName: ai-employee-ksa
       containers:
       - name: orchestrator
-        image: gcr.io/YOUR_PROJECT_ID/personal-ai-employee:latest
+        image: gcr.io/personal-ai-employee-487018/personal-ai-employee:latest
         imagePullPolicy: Always
         command: ["python", "orchestrator_claude.py"]
         ports:
@@ -201,7 +201,7 @@ spec:
       serviceAccountName: ai-employee-ksa
       containers:
       - name: api-server
-        image: gcr.io/YOUR_PROJECT_ID/personal-ai-employee:latest
+        image: gcr.io/personal-ai-employee-487018/personal-ai-employee:latest
         imagePullPolicy: Always
         command: ["python", "platinum/api.py"]
         ports:
@@ -260,7 +260,7 @@ spec:
       serviceAccountName: ai-employee-ksa
       containers:
       - name: watcher
-        image: gcr.io/YOUR_PROJECT_ID/personal-ai-employee:latest
+        image: gcr.io/personal-ai-employee-487018/personal-ai-employee:latest
         imagePullPolicy: Always
         command: ["python", "watcher_filesystem.py"]
         envFrom:
