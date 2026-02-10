@@ -147,17 +147,21 @@ spec:
         - name: logs
           mountPath: /app/logs
         livenessProbe:
-          httpGet:
-            path: /health
-            port: 8000
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - test -f logs/orchestrator.log && find logs/orchestrator.log -mmin -2 | grep -q .
           initialDelaySeconds: 30
           periodSeconds: 30
-          timeoutSeconds: 10
+          timeoutSeconds: 5
           failureThreshold: 3
         readinessProbe:
-          httpGet:
-            path: /health
-            port: 8000
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - test -f logs/orchestrator.log && pgrep -f orchestrator_claude.py > /dev/null
           initialDelaySeconds: 20
           periodSeconds: 10
           timeoutSeconds: 5
@@ -287,8 +291,9 @@ spec:
           claimName: ai-employee-logs
 
 ---
-# Orchestrator Service (LoadBalancer) - Routes to API Server
-# NOTE: Configured to route to api-server pods for external access
+# Orchestrator Service (LoadBalancer) - HTTP Access Point
+# Routes to api-server for HTTP/REST API access
+# Orchestrator pods run in background (no HTTP server)
 apiVersion: v1
 kind: Service
 metadata:
@@ -302,7 +307,7 @@ metadata:
 spec:
   type: LoadBalancer
   selector:
-    app: api-server  # Routes to api-server pods
+    app: api-server  # Routes to API server for HTTP access
   ports:
   - protocol: TCP
     port: 8000
