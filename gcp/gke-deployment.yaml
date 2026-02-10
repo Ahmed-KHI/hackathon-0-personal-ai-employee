@@ -287,21 +287,22 @@ spec:
           claimName: ai-employee-logs
 
 ---
-# Orchestrator Service (LoadBalancer)
+# Orchestrator Service (LoadBalancer) - Routes to API Server
+# NOTE: Configured to route to api-server pods for external access
 apiVersion: v1
 kind: Service
 metadata:
   name: orchestrator-service
   namespace: ai-employee
   labels:
-    app: orchestrator
+    app: api-server
   annotations:
     cloud.google.com/neg: '{"ingress": true}'
     cloud.google.com/backend-config: '{"default": "orchestrator-backend-config"}'
 spec:
   type: LoadBalancer
   selector:
-    app: orchestrator
+    app: api-server  # Routes to api-server pods
   ports:
   - protocol: TCP
     port: 8000
