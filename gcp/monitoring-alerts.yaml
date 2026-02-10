@@ -1,0 +1,150 @@
+# Cloud Monitoring Alert Policies for Personal AI Employee
+# Deploy: gcloud alpha monitoring policies create --policy-from-file=FILE
+
+# Alert 1: Orchestrator Down
+alert:
+  display_name: "AI Employee - Orchestrator Down"
+  documentation:
+    content: "The orchestrator has no running pods. Autonomous task processing is halted."
+    mime_type: text/markdown
+  conditions:
+  - display_name: "Orchestrator pod count = 0"
+    condition_threshold:
+      filter: |
+        resource.type = "k8s_pod"
+        AND resource.labels.namespace_name = "ai-employee"
+        AND resource.labels.pod_name = monitoring.regex.full_match("orchestrator-.*")
+        AND metric.type = "kubernetes.io/container/uptime"
+      aggregations:
+      - alignment_period: 60s
+        per_series_aligner: ALIGN_MAX
+      comparison: COMPARISON_LT
+      threshold_value: 1
+      duration: 300s  # 5 minutes
+  notification_channels:
+    # Add your email notification channel ID here
+    - projects/personal-ai-employee-487018/notificationChannels/YOUR_CHANNEL_ID
+  alert_strategy:
+    auto_close: 1800s  # 30 minutes
+
+---
+# Alert 2: High Error Rate
+alert:
+  display_name: "AI Employee - High Error Rate"
+  documentation:
+content: "The AI Employee is experiencing a high error rate (>10% of requests failing)."
+    mime_type: text/markdown
+  conditions:
+  - display_name: "Error rate > 10%"
+    condition_threshold:
+      filter: |
+        resource.type = "k8s_pod"
+        AND resource.labels.namespace_name = "ai-employee"
+        AND metric.type = "logging.googleapis.com/user/error_count"
+      aggregations:
+      - alignment_period: 300s
+        per_series_aligner: ALIGN_RATE
+      comparison: COMPARISON_GT
+      threshold_value: 0.1  # 10%
+      duration: 300s
+  notification_channels:
+    - projects/personal-ai-employee-487018/notificationChannels/YOUR_CHANNEL_ID
+
+---
+# Alert 3: Watcher Crash Loop
+alert:
+  display_name: "AI Employee - Watcher Crash Loop"
+  documentation:
+    content: "One or more watchers are crash-looping (restarting frequently)."
+    mime_type: text/markdown
+  conditions:
+  - display_name: "Restart count > 5 in 10 minutes"
+    condition_threshold:
+      filter: |
+        resource.type = "k8s_pod"
+        AND resource.labels.namespace_name = "ai-employee"
+        AND resource.labels.pod_name = monitoring.regex.full_match("watcher-.*")
+        AND metric.type = "kubernetes.io/pod/restart_count"
+      aggregations:
+      - alignment_period: 600s
+        per_series_aligner: ALIGN_DELTA
+      comparison: COMPARISON_GT
+      threshold_value: 5
+      duration: 0s
+  notification_channels:
+    - projects/personal-ai-employee-487018/notificationChannels/YOUR_CHANNEL_ID
+
+---
+# Alert 4: High Memory Usage
+alert:
+  display_name: "AI Employee - High Memory Usage"
+  documentation:
+    content: "Memory usage is above 90% - pods may be OOMKilled soon."
+    mime_type: text/markdown
+  conditions:
+  - display_name: "Memory utilization > 90%"
+    condition_threshold:
+      filter: |
+        resource.type = "k8s_pod"
+        AND resource.labels.namespace_name = "ai-employee"
+        AND metric.type = "kubernetes.io/container/memory/limit_utilization"
+      aggregations:
+      - alignment_period: 300s
+        per_series_aligner: ALIGN_MEAN
+      comparison: COMPARISON_GT
+      threshold_value: 0.9
+      duration: 300s
+  notification_channels:
+    - projects/personal-ai-employee-487018/notificationChannels/YOUR_CHANNEL_ID
+
+---
+# Alert 5: API Latency High
+alert:
+  display_name: "AI Employee - API Latency High"
+  documentation:
+    content: "API response time is consistently above 2 seconds."
+    mime_type: text/markdown
+  conditions:
+  - display_name: "95th percentile latency > 2s"
+    condition_threshold:
+      filter: |
+        resource.type = "k8s_pod"
+        AND resource.labels.namespace_name = "ai-employee"
+        AND resource.labels.pod_name = monitoring.regex.full_match("api-server-.*")
+        AND metric.type = "loadbalancing.googleapis.com/https/request_duration"
+      aggregations:
+      - alignment_period: 300s
+        per_series_aligner: ALIGN_DELTA
+        group_by_fields:
+        - resource.pod_name
+      comparison: COMPARISON_GT
+      threshold_value: 2000  # milliseconds
+      duration: 600s
+  notification_channels:
+    - projects/personal-ai-employee-487018/notificationChannels/YOUR_CHANNEL_ID
+
+---
+# Alert 6: Backup Failed
+alert:
+  display_name: "AI Employee - Backup Job Failed"
+  documentation:
+    content: "The automated vault backup CronJob has failed."
+    mime_type: text/markdown
+  conditions:
+  - display_name: "Backup job failed"
+    condition_threshold:
+      filter: |
+        resource.type = "k8s_job"
+        AND resource.labels.namespace_name = "ai-employee"
+        AND resource.labels.job_name = monitoring.regex.full_match("vault-backup-.*")
+        AND metric.type = "kubernetes.io/job/failed"
+      aggregations:
+      - alignment_period: 3600s
+        per_series_aligner: ALIGN_MAX
+      comparison: COMPARISON_GT
+      threshold_value: 0
+      duration: 0s
+  notification_channels:
+    - projects/personal-ai-employee-487018/notificationChannels/YOUR_CHANNEL_ID
+  alert_strategy:
+    auto_close: 86400s  # 24 hours

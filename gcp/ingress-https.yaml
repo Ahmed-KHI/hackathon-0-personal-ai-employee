@@ -1,31 +1,55 @@
 ---
-# Ingress with Google Cloud Load Balancer
+# Ingress with Google Cloud Load Balancer and HTTPS
+# This replaces the LoadBalancer Service for production HTTPS access
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: ai-employee-ingress
   namespace: ai-employee
   annotations:
+    # Use Google Cloud Load Balancer
     kubernetes.io/ingress.class: "gce"
-    kubernetes.io/ingress.global-static-ip-name: "ai-employee-ip"
+    
+    # Enable GCP-managed SSL certificate
     networking.gke.io/managed-certificates: "ai-employee-cert"
+    
+    # Allow HTTP (will redirect to HTTPS automatically)
     kubernetes.io/ingress.allow-http: "true"
-    ingress.gcp.kubernetes.io/pre-shared-cert: "ai-employee-cert"
+    
+    # Static IP (optional - creates new IP if not exists)
+    # kubernetes.io/ingress.global-static-ip-name: "ai-employee-ip"
+    
+    # Backend configuration for health checks and timeouts
+    cloud.google.com/backend-config: '{"default": "ai-employee-backend-config"}'
 spec:
   rules:
-  - host: api.yourcompany.com
+  # Option 1: Use nip.io with external IP (works without DNS)
+  - host: 34.136.6.152.nip.io
     http:
       paths:
       - path: /*
         pathType: ImplementationSpecific
         backend:
           service:
-            name: api-service
+            name: api-server
             port:
               number: 8000
+  
+  # Option 2: Use custom domain (if you have one)
+  # Uncomment and replace with your domain:
+  # - host: api.yourcompany.com
+  #   http:
+  #     paths:
+  #     - path: /*
+  #       pathType: ImplementationSpecific
+  #       backend:
+  #         service:
+  #           name: api-server
+  #           port:
+  #             number: 8000
 
 ---
-# Managed Certificate (requires domain)
+# Managed Certificate (GCP will provision Let's Encrypt cert automatically)
 apiVersion: networking.gke.io/v1
 kind: ManagedCertificate
 metadata:
@@ -33,4 +57,66 @@ metadata:
   namespace: ai-employee
 spec:
   domains:
-    - api.yourcompany.com
+    - 34.136.6.152.nip.io  # Works immediately without DNS setup
+    # - api.yourcompany.com  # Add your custom domain here
+
+---
+# Backend Configuration for health checks and session affinity
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: ai-employee-backend-config
+  namespace: ai-employee
+spec:
+  # Health check configuration
+  healthCheck:
+    checkIntervalSec: 10
+    timeoutSec: 5
+    healthyThreshold: 2
+    unhealthyThreshold: 3
+    type: HTTP
+    requestPath: /health
+    port: 8000
+  
+  # Timeout configuration
+  timeoutSec: 300
+  
+  # Connection draining (graceful shutdown)
+  connectionDraining:
+    drainingTimeoutSec: 60
+  
+  # Session affinity (optional - enables sticky sessions)
+  sessionAffinity:
+    affinityType: "CLIENT_IP"
+    affinityCookieTtlSec: 3600
+
+---
+# Service for API Server (ClusterIP - used by Ingress)
+# The LoadBalancer service can be removed once Ingress is working
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-server-internal
+  namespace: ai-employee
+  annotations:
+    cloud.google.com/backend-config: '{"default": "ai-employee-backend-config"}'
+spec:
+  type: ClusterIP
+  selector:
+    app: api-server
+  ports:
+  - protocol: TCP
+    port: 8000
+    targetPort: 8000
+
+---
+# INSTRUCTIONS:
+# 1. Deploy: kubectl apply -f gcp/ingress-https.yaml
+# 2. Get Ingress IP: kubectl get ingress ai-employee-ingress -n ai-employee
+# 3. Wait for certificate provisioning (5-15 minutes): 
+#    kubectl describe managedcertificate ai-employee-cert -n ai-employee
+# 4. Access via HTTPS: https://34.136.6.152.nip.io
+# 5. (Optional) Add custom domain:
+#    - Uncomment custom domain in rules and domains sections
+#    - Point DNS A record to Ingress IP
+#    - Wait for certificate provisioning
