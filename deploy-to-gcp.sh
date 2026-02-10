@@ -94,8 +94,8 @@ else
         --enable-autoscaling \
         --min-nodes 2 \
         --max-nodes 5 \
-        --enable-cloud-monitoring \
-        --enable-cloud-logging \
+        --logging=SYSTEM \
+        --monitoring=SYSTEM \
         --enable-autorepair \
         --enable-autoupgrade \
         --quiet
