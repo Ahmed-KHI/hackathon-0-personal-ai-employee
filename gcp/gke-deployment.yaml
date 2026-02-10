@@ -47,8 +47,8 @@ metadata:
   namespace: ai-employee
 spec:
   accessModes:
-    - ReadWriteOnce
-  storageClassName: standard-rwo  # GCE Persistent Disk
+    - ReadWriteMany  # Changed from ReadWriteOnce to allow multi-pod access
+  storageClassName: standard-rwx  # Filestore for ReadWriteMany
   resources:
     requests:
       storage: 20Gi
@@ -62,8 +62,8 @@ metadata:
   namespace: ai-employee
 spec:
   accessModes:
-    - ReadWriteOnce
-  storageClassName: standard-rwo
+    - ReadWriteMany  # Changed from ReadWriteOnce to allow multi-pod access
+  storageClassName: standard-rwx  # Filestore for ReadWriteMany
   resources:
     requests:
       storage: 10Gi
@@ -90,15 +90,12 @@ metadata:
     tier: platinum
     version: v1
 spec:
-  replicas: 2
+  replicas: 1  # Single replica due to ReadWriteOnce PVC constraints
   selector:
     matchLabels:
       app: orchestrator
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
+    type: Recreate  # Can't do RollingUpdate with RWO volumes
   template:
     metadata:
       labels:
@@ -136,11 +133,11 @@ spec:
               key: PLATFORM_API_KEY
         resources:
           requests:
-            memory: "512Mi"
-            cpu: "250m"
+            memory: "256Mi"
+            cpu: "100m"
           limits:
-            memory: "2Gi"
-            cpu: "1000m"
+            memory: "1Gi"
+            cpu: "500m"
         volumeMounts:
         - name: vaults
           mountPath: /app/vaults
@@ -358,17 +355,17 @@ spec:
   timeoutSec: 300
 
 ---
-# Horizontal Pod Autoscaler for Orchestrator
+# Horizontal Pod Autoscaler for API Server
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: orchestrator-hpa
+  name: api-server-hpa
   namespace: ai-employee
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: orchestrator
+    name: api-server
   minReplicas: 2
   maxReplicas: 10
   metrics:
