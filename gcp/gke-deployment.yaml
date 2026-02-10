@@ -441,3 +441,284 @@ spec:
       port: 443  # HTTPS
     - protocol: TCP
       port: 80   # HTTP
+---
+# Gmail Watcher Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: watcher-gmail
+  namespace: ai-employee
+  labels:
+    app: watcher-gmail
+    tier: platinum
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: watcher-gmail
+  template:
+    metadata:
+      labels:
+        app: watcher-gmail
+        tier: platinum
+    spec:
+      serviceAccountName: ai-employee-ksa
+      containers:
+      - name: watcher
+        image: gcr.io/personal-ai-employee-487018/personal-ai-employee:latest
+        imagePullPolicy: Always
+        command: ["python", "watcher_gmail.py"]
+        envFrom:
+        - configMapRef:
+            name: ai-employee-config
+        env:
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ai-employee-secrets
+              key: ANTHROPIC_API_KEY
+        - name: GMAIL_ENABLED
+          value: "true"
+        - name: GMAIL_CREDENTIALS_PATH
+          value: "/app/secrets/gmail/credentials.json"
+        - name: GMAIL_TOKEN_PATH
+          value: "/app/secrets/gmail/token.json"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        volumeMounts:
+        - name: vault
+          mountPath: /app/obsidian_vault
+        - name: gmail-creds
+          mountPath: /app/secrets/gmail
+          readOnly: true
+      volumes:
+      - name: vault
+        emptyDir: {}
+      - name: gmail-creds
+        secret:
+          secretName: gmail-credentials
+
+---
+# LinkedIn Watcher Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: watcher-linkedin
+  namespace: ai-employee
+  labels:
+    app: watcher-linkedin
+    tier: platinum
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: watcher-linkedin
+  template:
+    metadata:
+      labels:
+        app: watcher-linkedin
+        tier: platinum
+    spec:
+      serviceAccountName: ai-employee-ksa
+      containers:
+      - name: watcher
+        image: gcr.io/personal-ai-employee-487018/personal-ai-employee:latest
+        imagePullPolicy: Always
+        command: ["python", "watcher_linkedin.py"]
+        envFrom:
+        - configMapRef:
+            name: ai-employee-config
+        env:
+        - name: LINKEDIN_ENABLED
+          value: "true"
+        - name: LINKEDIN_TOKEN_PATH
+          value: "/app/secrets/linkedin/token.json"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        volumeMounts:
+        - name: vault
+          mountPath: /app/obsidian_vault
+        - name: linkedin-creds
+          mountPath: /app/secrets/linkedin
+          readOnly: true
+      volumes:
+      - name: vault
+        emptyDir: {}
+      - name: linkedin-creds
+        secret:
+          secretName: linkedin-credentials
+
+---
+# Facebook Watcher Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: watcher-facebook
+  namespace: ai-employee
+  labels:
+    app: watcher-facebook
+    tier: platinum
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: watcher-facebook
+  template:
+    metadata:
+      labels:
+        app: watcher-facebook
+        tier: platinum
+    spec:
+      serviceAccountName: ai-employee-ksa
+      containers:
+      - name: watcher
+        image: gcr.io/personal-ai-employee-487018/personal-ai-employee:latest
+        imagePullPolicy: Always
+        command: ["python", "watcher_facebook.py"]
+        envFrom:
+        - configMapRef:
+            name: ai-employee-config
+        env:
+        - name: FACEBOOK_ENABLED
+          value: "true"
+        - name: FACEBOOK_TOKEN_PATH
+          value: "/app/secrets/facebook/token.json"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        volumeMounts:
+        - name: vault
+          mountPath: /app/obsidian_vault
+        - name: facebook-creds
+          mountPath: /app/secrets/facebook
+          readOnly: true
+      volumes:
+      - name: vault
+        emptyDir: {}
+      - name: facebook-creds
+        secret:
+          secretName: facebook-credentials
+
+---
+# Instagram Watcher Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: watcher-instagram
+  namespace: ai-employee
+  labels:
+    app: watcher-instagram
+    tier: platinum
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: watcher-instagram
+  template:
+    metadata:
+      labels:
+        app: watcher-instagram
+        tier: platinum
+    spec:
+      serviceAccountName: ai-employee-ksa
+      containers:
+      - name: watcher
+        image: gcr.io/personal-ai-employee-487018/personal-ai-employee:latest
+        imagePullPolicy: Always
+        command: ["python", "watcher_instagram.py"]
+        envFrom:
+        - configMapRef:
+            name: ai-employee-config
+        env:
+        - name: INSTAGRAM_ENABLED
+          value: "true"
+        - name: INSTAGRAM_TOKEN_PATH
+          value: "/app/secrets/instagram/token.json"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        volumeMounts:
+        - name: vault
+          mountPath: /app/obsidian_vault
+        - name: instagram-creds
+          mountPath: /app/secrets/instagram
+          readOnly: true
+      volumes:
+      - name: vault
+        emptyDir: {}
+      - name: instagram-creds
+        secret:
+          secretName: instagram-credentials
+
+---
+# Twitter Watcher Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: watcher-twitter
+  namespace: ai-employee
+  labels:
+    app: watcher-twitter
+    tier: platinum
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: watcher-twitter
+  template:
+    metadata:
+      labels:
+        app: watcher-twitter
+        tier: platinum
+    spec:
+      serviceAccountName: ai-employee-ksa
+      containers:
+      - name: watcher
+        image: gcr.io/personal-ai-employee-487018/personal-ai-employee:latest
+        imagePullPolicy: Always
+        command: ["python", "watcher_twitter.py"]
+        envFrom:
+        - configMapRef:
+            name: ai-employee-config
+        env:
+        - name: TWITTER_ENABLED
+          value: "true"
+        - name: TWITTER_TOKEN_PATH
+          value: "/app/secrets/twitter/token.json"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        volumeMounts:
+        - name: vault
+          mountPath: /app/obsidian_vault
+        - name: twitter-creds
+          mountPath: /app/secrets/twitter
+          readOnly: true
+      volumes:
+      - name: vault
+        emptyDir: {}
+      - name: twitter-creds
+        secret:
+          secretName: twitter-credentials
