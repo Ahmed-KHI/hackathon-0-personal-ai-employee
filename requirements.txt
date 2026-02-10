@@ -24,10 +24,9 @@ plaid-python==16.0.0
 
 # Orchestration & Async
 aiofiles==23.2.1
-asyncio==3.4.3
 
-# MCP Protocol
-mcp==1.26.0
+# MCP Protocol (Model Context Protocol)
+# mcp package will be installed separately if needed
 
 # Logging & Monitoring
 structlog==24.1.0
@@ -41,7 +40,7 @@ uvicorn[standard]==0.27.0
 
 # Utilities
 pytz==2024.1
-dateutil==2.8.2
+python-dateutil==2.8.2
 pyyaml==6.0.1
 
 # Testing
