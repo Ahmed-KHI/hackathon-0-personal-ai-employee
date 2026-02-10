@@ -65,15 +65,17 @@ class LinkedInCallbackHandler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-type', 'text/html')
                 self.end_headers()
-                self.wfile.write(b'''
-                    <html>
-                    <body style="font-family: Arial; text-align: center; padding: 50px;">
-                        <h1 style="color: green;">✅ LinkedIn Authentication Successful!</h1>
-                        <p>Your LinkedIn account is now connected to the AI Employee.</p>
-                        <p>You can close this window and return to the terminal.</p>
-                    </body>
-                    </html>
-                ''')
+                
+                success_html = """
+                <html>
+                <body style="font-family: Arial; text-align: center; padding: 50px;">
+                    <h1 style="color: green;">✅ LinkedIn Authentication Successful!</h1>
+                    <p>Your LinkedIn account is now connected to the AI Employee.</p>
+                    <p>You can close this window and return to the terminal.</p>
+                </body>
+                </html>
+                """
+                self.wfile.write(success_html.encode())
                 
                 print(f"\n✅ OAuth token saved to {TOKEN_PATH}")
                 print("✅ LinkedIn authentication successful!")
@@ -93,15 +95,17 @@ class LinkedInCallbackHandler(BaseHTTPRequestHandler):
             self.send_response(400)
             self.send_header('Content-type', 'text/html')
             self.end_headers()
-            self.wfile.write(f'''
-                <html>
-                <body style="font-family: Arial; text-align: center; padding: 50px;">
-                    <h1 style="color: red;">❌ Authentication Failed</h1>
-                    <p>Error: {error}</p>
-                    <p>{error_desc}</p>
-                </body>
-                </html>
-            '''.encode())
+            
+            error_html = f"""
+            <html>
+            <body style="font-family: Arial; text-align: center; padding: 50px;">
+                <h1 style="color: red;">❌ Authentication Failed</h1>
+                <p>Error: {error}</p>
+                <p>{error_desc}</p>
+            </body>
+            </html>
+            """
+            self.wfile.write(error_html.encode())
             
             print(f"\n❌ Authentication failed: {error} - {error_desc}")
     

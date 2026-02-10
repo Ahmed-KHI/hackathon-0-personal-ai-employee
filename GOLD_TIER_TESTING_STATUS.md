@@ -1,6 +1,6 @@
 # Gold Tier Testing Status
 
-*Last Updated: February 8, 2026*
+*Last Updated: February 10, 2026*
 
 ---
 
@@ -91,9 +91,9 @@ This document tracks the validation testing for Gold Tier implementations (Phase
 
 ---
 
-### Twitter Integration ✅
+### Twitter Integration ⚠️ READ-ONLY MODE
 
-**Status**: Watcher functional, MCP server ready (requires OAuth)
+**Status**: OAuth functional, posting requires paid tier
 
 **Watcher Testing**:
 - ✅ Detects quick wins for celebration tweets
@@ -102,17 +102,80 @@ This document tracks the validation testing for Gold Tier implementations (Phase
 - ✅ Creates proper JSON tasks in task_queue/inbox/
 - ✅ State tracking: `.twitter_watcher_state.json`
 
+**OAuth Setup Complete**:
+- App: JARAGAR AI (ID: RklHbnNMN1h4WEJVeXpDYUxSVXc6MTpjaQ)
+- User: @MirzaMuham93456 (Mirza Muhammad Ahmed)
+- Token: Valid OAuth 2.0 access token with refresh capability
+- Scopes: tweet.read, tweet.write, users.read, offline.access
+
+**⚠️ LIMITATION DISCOVERED (February 10, 2026)**:
+- Twitter API v2 requires **$100/month Basic tier** for posting tweets (402 Payment Required error)
+- Free tier only supports: reading timelines, user info, OAuth authentication
+- **Recommendation**: Use Twitter in "read-only/monitoring mode" OR upgrade to paid tier
+- Watcher can still create draft tweets for manual posting (HITL workflow)
+
 **Test Results**:
-- Created 2 tasks: `twitter_quick_win`, `twitter_insight`
-- Proper instructions for 280-character tweets
-- Auto-approve rules for non-sensitive content
+- ✅ OAuth 2.0 PKCE flow working
+- ✅ User authentication successful
+- ✅ Account info retrieval working
+- ❌ Live posting blocked (paid tier required)
+- ✅ Created 2 tasks: `twitter_quick_win`, `twitter_insight`
+- ✅ Proper instructions for 280-character tweets
+- ✅ Auto-approve rules for non-sensitive content
 
 **MCP Server**: Ready at `mcp_servers/twitter_server/twitter_server.py`
 - Actions: post_tweet, post_thread, reply_to_tweet, get_tweets
-- **Requires**: Twitter Developer account, OAuth 2.0 PKCE (Client ID, Secret, Refresh Token)
+- Note: Posting actions require $100/month Twitter Basic tier
 
 **Agent Skills**: `obsidian_vault/agent_skills/twitter_skills.md` (350 lines)
 - Tweet structure, thread creation, engagement rules
+
+**Decision**: Keep Twitter for monitoring and draft creation, manual posting until/unless paid tier is needed.
+
+---
+
+### LinkedIn Integration ✅ PRODUCTION READY
+
+**Status**: ✅ FULLY OPERATIONAL - END-TO-END TESTED
+
+**OAuth Setup Complete**:
+- App: AI Employee Bot (Client ID: 77p0s8xzmcc53k)
+- Products: Share on LinkedIn + Sign In with LinkedIn using OpenID Connect
+- User: Mirza Muhammad Ahmed (Sub ID: Hvhj7UPcNv)
+- Scopes: openid, profile, w_member_social
+- Token: Long-lived (~60 days / 5,183,999 seconds)
+
+**Watcher Testing**:
+- ✅ Daily posting schedule (9:00 AM optimal time)
+- ✅ Detects professional milestones in Done/ folder
+- ✅ Monitors Business_Goals.md for achievements
+- ✅ Creates proper JSON tasks in task_queue/inbox/
+- ✅ State tracking: `.linkedin_watcher_state.json`
+
+**Full Workflow Test (February 10, 2026)**:
+1. ✅ Ran OAuth setup: `setup_linkedin_v2.py`
+2. ✅ Browser authorization completed
+3. ✅ Access token received and saved to `secrets/linkedin_token.json`
+4. ✅ User profile retrieved: Mirza Muhammad Ahmed
+5. ✅ **LIVE POST**: Successfully posted to LinkedIn
+   - Post URN: urn:li:share:7426976428807839745
+   - Content: 414 characters with hashtags
+   - Visibility: PUBLIC
+   - Posted At: 2026-02-10 13:12:46 UTC
+   - Status: Live and visible on LinkedIn feed
+6. ✅ Audit logged to `audit_logs/audit_2026-02-10.jsonl`
+
+**API Endpoints Used**:
+- GET https://api.linkedin.com/v2/userinfo (OpenID Connect)
+- POST https://api.linkedin.com/v2/ugcPosts (Share Content)
+
+**MCP Server**: Stub at `mcp_servers/linkedin_server/` (needs full implementation)
+- Actions: post_update, post_article, get_profile, get_connections (planned)
+
+**Result**: 🎉 LinkedIn integration is PRODUCTION READY and has successfully posted to a live LinkedIn profile!
+
+**Agent Skills**: Integration with `obsidian_vault/agent_skills/` (planned)
+- Professional content guidelines, engagement strategy, timing optimization
 
 ---
 
