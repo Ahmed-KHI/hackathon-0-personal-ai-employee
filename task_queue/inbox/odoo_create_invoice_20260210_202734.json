@@ -1,0 +1,13 @@
+{
+  "task_id": "odoo_create_invoice_20260210_202734",
+  "task_type": "odoo_action",
+  "trigger": "create_invoice",
+  "priority": "medium",
+  "created_at": "2026-02-10T20:27:35.008609",
+  "content": {
+    "project_name": "FACEBOOK_milestone_post",
+    "client_name": "Unknown Client",
+    "context": "---\ntask_type: facebook_post\npriority: medium\nrequires_approval: true\n---\n\n# facebook post: project completion announcement\n\n## task details\nreview and create a facebook post announcing the completion of our major milestone: facebook integration for personal ai employee system.\n\n## project information\nfile: obsidian_vault/done/facebook_integration_complete.md\n\n## content preview\n\ud83c\udf89 major milestone achievement\n\nproject: complete ai employee integration - gold tier\nstatus: \u2705 completed\n\nsuccessfully"
+  },
+  "instructions": "Review obsidian_vault/agent_skills/odoo_skills.md for Odoo operations.\n\nTask: Create customer invoice in Odoo\n\nProject: FACEBOOK_milestone_post\nClient: Unknown Client\nContext: ---\ntask_type: facebook_post\npriority: medium\nrequires_approval: true\n---\n\n# facebook post: project completion announcement\n\n## task details\nreview and create a facebook post announcing the completion of our major milestone: facebook integration for personal ai employee system.\n\n## project information\nfile: obsidian_vault/done/facebook_integration_complete.md\n\n## content preview\n\ud83c\udf89 major milestone achievement\n\nproject: complete ai employee integration - gold tier\nstatus: \u2705 completed\n\nsuccessfully\n\nAction Steps:\n1. Extract invoice details:\n   - Customer name (from project or context)\n   - Invoice amount (from contract or estimate)\n   - Service description\n   - Payment terms\n2. Check if customer exists in Odoo (use get_partner_balance to verify)\n3. Create invoice via odoo_server.py:\n   - partner_name: [Customer name]\n   - amount: [Invoice amount]\n   - description: [Service description]\n4. If HITL required (amount > $5000), move to /Needs_Approval/\n5. If auto-approved, create invoice and log result\n6. Update Business_Goals.md with \"Invoice INV-XXX created for [Client]\"\n\nInvoice Details Format:\n- Partner: [Company name or individual]\n- Amount: [Numeric value]\n- Description: [Brief service description]\n- Due Date: Net 30 (30 days from invoice date)\n"
+}

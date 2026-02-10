@@ -1,0 +1,12 @@
+{
+  "task_id": "twitter_insight_20260210_202841",
+  "task_type": "twitter_action",
+  "trigger": "insight",
+  "priority": "medium",
+  "created_at": "2026-02-10T20:28:41.987323",
+  "content": {
+    "insight_text": "FACEBOOK_milestone_post",
+    "context": "---\ntask_type: facebook_post\npriority: medium\nrequires_approval: true\n---\n\n# facebook post: project completion announcement\n\n## task details\nreview and create a facebook post announcing the completion of our major milestone: facebook integration for personal ai employee system.\n\n## project information\nfile: obsidian_vault/done/facebook_integration_complete.md\n\n## content preview\n\ud83c\udf89 major milestone achievement\n\nproject: complete ai employee integration - gold tier\nstatus: \u2705 completed\n\nsuccessfully"
+  },
+  "instructions": "Review obsidian_vault/agent_skills/twitter_skills.md for posting guidelines.\n\nTask: Share industry insight or tip on Twitter\n\nInsight: FACEBOOK_milestone_post\nContext: ---\ntask_type: facebook_post\npriority: medium\nrequires_approval: true\n---\n\n# facebook post: project completion announcement\n\n## task details\nreview and create a facebook post announcing the completion of our major milestone: facebook integration for personal ai employee system.\n\n## project information\nfile: obsidian_vault/done/facebook_integration_complete.md\n\n## content preview\n\ud83c\udf89 major milestone achievement\n\nproject: complete ai employee integration - gold tier\nstatus: \u2705 completed\n\nsuccessfully\n\nAction Steps:\n1. Identify key lesson or observation\n2. Write as actionable tip or thought-provoking question\n3. Consider thread format if >280 characters (see twitter_skills.md)\n4. Add value: \"Here's why this matters...\"\n5. Use 2-3 hashtags (industry + topic)\n6. Include CTA: \"What's worked for you?\"\n7. Auto-approve if educational/neutral\n8. Post during peak times (see twitter_skills.md)\n\nTweet Formats:\n- Tip: \"Pro tip: [Action]. Result: [Benefit]. #[Industry]Tip\"\n- Observation: \"[Trend noticed]. [Why it matters]. Thoughts?\"\n- Lesson: \"Learned: [What]. Changed our approach. [How].\"\n"
+}

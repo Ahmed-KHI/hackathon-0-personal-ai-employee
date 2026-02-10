@@ -1,0 +1,12 @@
+{
+  "task_id": "twitter_quick_win_20260210_212842",
+  "task_type": "twitter_action",
+  "trigger": "quick_win",
+  "priority": "medium",
+  "created_at": "2026-02-10T21:28:42.105511",
+  "content": {
+    "win_description": "FILE_social_announcement_feb10.txt",
+    "context": "---\ntype: file_drop\noriginal_name: social_announcement_feb10.txt\nsize: 778\ncreated: 2026-02-10t16:25:14.156789+00:00\npriority: medium\nstatus: pending\ncontent_length: 733\n---\n\n## file dropped for processing\n\n**file**: social_announcement_feb10.txt  \n**size**: 778 bytes  \n**content length**: 733 characters  \n**location**: i:\\hackathon 0 personal ai employee\\watch_inbox\\social_announcement_feb10.txt  \n**created**: 2026-02-10 16:25:14 utc\n\n## full file content\n\n```\n\ud83d\udcf1 social media post request\n\npleas"
+  },
+  "instructions": "Review obsidian_vault/agent_skills/twitter_skills.md for posting guidelines.\n\nTask: Share quick win on Twitter\n\nWin: FILE_social_announcement_feb10.txt\nContext: ---\ntype: file_drop\noriginal_name: social_announcement_feb10.txt\nsize: 778\ncreated: 2026-02-10t16:25:14.156789+00:00\npriority: medium\nstatus: pending\ncontent_length: 733\n---\n\n## file dropped for processing\n\n**file**: social_announcement_feb10.txt  \n**size**: 778 bytes  \n**content length**: 733 characters  \n**location**: i:\\hackathon 0 personal ai employee\\watch_inbox\\social_announcement_feb10.txt  \n**created**: 2026-02-10 16:25:14 utc\n\n## full file content\n\n```\n\ud83d\udcf1 social media post request\n\npleas\n\nAction Steps:\n1. Identify core achievement (completed project, client win, milestone)\n2. Write celebratory but professional tweet\n3. Use 1 emoji opener (\ud83c\udf89 \u2705 \ud83d\ude80)\n4. Keep under 250 characters for easy RT\n5. Tag relevant people/companies if appropriate (max 2 tags)\n6. Add 2-3 hashtags\n7. Auto-approve if non-sensitive\n8. Post and engage with responses\n\nTweet Tone:\n- Excited but not boastful\n- Specific outcome, not vague \"great work\"\n- Give credit to team/client where appropriate\n- Invite engagement (\"What's your approach?\")\n"
+}

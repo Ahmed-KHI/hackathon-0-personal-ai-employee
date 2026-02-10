@@ -93,9 +93,14 @@ class LinkedInMCPServer:
             dict: Response with post ID and status
         """
         try:
-            # Get user profile to get person URN
-            profile = self.get_profile()
-            person_urn = f"urn:li:person:{profile['id']}"
+            # Use stored person_id instead of fetching profile (avoids r_liteprofile permission)
+            person_id = self.token_data.get('person_id')
+            if not person_id:
+                # Fallback: try to get profile (but this will fail without r_liteprofile)
+                profile = self.get_profile()
+                person_id = profile['id']
+            
+            person_urn = f"urn:li:person:{person_id}"
             
             # Build post payload
             post_data = {

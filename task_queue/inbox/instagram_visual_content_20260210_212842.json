@@ -1,0 +1,14 @@
+{
+  "task_id": "instagram_visual_content_20260210_212842",
+  "task_type": "instagram_action",
+  "trigger": "visual_content",
+  "priority": "medium",
+  "created_at": "2026-02-10T21:28:42.040810",
+  "content": {
+    "item_name": "SOCIAL_POST_live_announcement",
+    "item_path": "obsidian_vault\\Done\\SOCIAL_POST_live_announcement.md",
+    "category": "visual_showcase",
+    "description": "---\ntype: social_media_post\nplatforms: [linkedin, facebook, instagram]\npriority: high\ncreated: 2026-02-10t16:25:00\n---\n\n# social media post request\n\n## post content\n\n\ud83d\ude80 **exciting update!** our personal ai employee system is now live with full automation capabilities. from email monitoring to social "
+  },
+  "instructions": "Review obsidian_vault/agent_skills/instagram_skills.md for posting guidelines.\n\nTask: Post visual content to Instagram\n\nContent: SOCIAL_POST_live_announcement\nCategory: visual_showcase\nDescription: ---\ntype: social_media_post\nplatforms: [linkedin, facebook, instagram]\npriority: high\ncreated: 2026-02-10t16:25:00\n---\n\n# social media post request\n\n## post content\n\n\ud83d\ude80 **exciting update!** our personal ai employee system is now live with full automation capabilities. from email monitoring to social \n\nAction Steps:\n1. Extract image URL or visual asset from content\n2. Craft Instagram-optimized caption (125 chars or less for preview)\n3. Add relevant hashtags (15-20 hashtags, max 30)\n4. Determine if Story or Feed post is more appropriate\n5. Check HITL approval requirements (see instagram_skills.md)\n6. If approved, use instagram_server.py to post_photo or post_story\n7. Log result in audit log\n\nCaption Guidelines:\n- Lead with visual hook or key benefit\n- Use emojis (2-4 per caption)\n- Add call-to-action (tag someone, comment, visit link)\n- Keep it authentic and conversational\n- Place hashtags at end or in first comment\n\nVisual Requirements:\n- Square (1:1) or Vertical (4:5) preferred\n- Minimum 1080x1080 pixels\n- High contrast and clear subject\n- Brand-consistent filters/style\n"
+}

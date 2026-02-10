@@ -1,0 +1,437 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ai-employee
+  labels:
+    name: ai-employee
+    tier: platinum
+    environment: production
+
+---
+# ConfigMap for application configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ai-employee-config
+  namespace: ai-employee
+data:
+  VAULT_PATH: "/app/vaults/tenant_default"
+  ENABLE_ENCRYPTION: "false"
+  LOG_LEVEL: "INFO"
+  ORCHESTRATOR_CYCLE_SECONDS: "30"
+  GCP_PROJECT_ID: "personal-ai-employee-487018"
+  GCS_VAULT_BUCKET: "personal-ai-employee-487018-ai-employee-vaults"
+  GCS_LOG_BUCKET: "personal-ai-employee-487018-ai-employee-logs"
+  GCS_AUDIT_BUCKET: "personal-ai-employee-487018-ai-employee-audit"
+
+---
+# Secret references to Google Secret Manager
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ai-employee-secrets
+  namespace: ai-employee
+type: Opaque
+stringData:
+  # These will be overridden by Secret Manager in production
+  ANTHROPIC_API_KEY: "placeholder"
+  PLATFORM_API_KEY: "placeholder"
+
+---
+# Persistent Disk for vaults (GCE PD)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ai-employee-vaults
+  namespace: ai-employee
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard-rwo  # GCE Persistent Disk
+  resources:
+    requests:
+      storage: 20Gi
+
+---
+# Persistent Disk for logs
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ai-employee-logs
+  namespace: ai-employee
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard-rwo
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+# Service Account for Workload Identity
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ai-employee-ksa
+  namespace: ai-employee
+  annotations:
+    iam.gke.io/gcp-service-account: ai-employee-gsa@personal-ai-employee-487018.iam.gserviceaccount.com
+
+---
+# Orchestrator Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orchestrator
+  namespace: ai-employee
+  labels:
+    app: orchestrator
+    tier: platinum
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: orchestrator
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: orchestrator
+        tier: platinum
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/api/metrics"
+    spec:
+      serviceAccountName: ai-employee-ksa
+      containers:
+      - name: orchestrator
+        image: gcr.io/YOUR_PROJECT_ID/personal-ai-employee:latest
+        imagePullPolicy: Always
+        command: ["python", "orchestrator_claude.py"]
+        ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
+        envFrom:
+        - configMapRef:
+            name: ai-employee-config
+        env:
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ai-employee-secrets
+              key: ANTHROPIC_API_KEY
+        - name: PLATFORM_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ai-employee-secrets
+              key: PLATFORM_API_KEY
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        volumeMounts:
+        - name: vaults
+          mountPath: /app/vaults
+        - name: logs
+          mountPath: /app/logs
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+      volumes:
+      - name: vaults
+        persistentVolumeClaim:
+          claimName: ai-employee-vaults
+      - name: logs
+        persistentVolumeClaim:
+          claimName: ai-employee-logs
+      # Optionally use GCS FUSE instead:
+      # - name: vaults
+      #   csi:
+      #     driver: gcsfuse.csi.storage.gke.io
+      #     volumeAttributes:
+      #       bucketName: YOUR_PROJECT_ID-ai-employee-vaults
+      #       mountOptions: "implicit-dirs"
+
+---
+# API Server Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-server
+  namespace: ai-employee
+  labels:
+    app: api-server
+    tier: platinum
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-server
+  template:
+    metadata:
+      labels:
+        app: api-server
+        tier: platinum
+    spec:
+      serviceAccountName: ai-employee-ksa
+      containers:
+      - name: api-server
+        image: gcr.io/YOUR_PROJECT_ID/personal-ai-employee:latest
+        imagePullPolicy: Always
+        command: ["python", "platinum/api.py"]
+        ports:
+        - containerPort: 8000
+          name: http
+        envFrom:
+        - configMapRef:
+            name: ai-employee-config
+        env:
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: ai-employee-secrets
+              key: ANTHROPIC_API_KEY
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 20
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+
+---
+# Filesystem Watcher Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: watcher-filesystem
+  namespace: ai-employee
+  labels:
+    app: watcher-filesystem
+    tier: platinum
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: watcher-filesystem
+  template:
+    metadata:
+      labels:
+        app: watcher-filesystem
+        tier: platinum
+    spec:
+      serviceAccountName: ai-employee-ksa
+      containers:
+      - name: watcher
+        image: gcr.io/YOUR_PROJECT_ID/personal-ai-employee:latest
+        imagePullPolicy: Always
+        command: ["python", "watcher_filesystem.py"]
+        envFrom:
+        - configMapRef:
+            name: ai-employee-config
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        volumeMounts:
+        - name: vaults
+          mountPath: /app/vaults
+        - name: logs
+          mountPath: /app/logs
+      volumes:
+      - name: vaults
+        persistentVolumeClaim:
+          claimName: ai-employee-vaults
+      - name: logs
+        persistentVolumeClaim:
+          claimName: ai-employee-logs
+
+---
+# Orchestrator Service (LoadBalancer)
+apiVersion: v1
+kind: Service
+metadata:
+  name: orchestrator-service
+  namespace: ai-employee
+  labels:
+    app: orchestrator
+  annotations:
+    cloud.google.com/neg: '{"ingress": true}'
+    cloud.google.com/backend-config: '{"default": "orchestrator-backend-config"}'
+spec:
+  type: LoadBalancer
+  selector:
+    app: orchestrator
+  ports:
+  - protocol: TCP
+    port: 8000
+    targetPort: 8000
+    name: http
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
+
+---
+# API Service (for Ingress)
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-service
+  namespace: ai-employee
+  labels:
+    app: api-server
+spec:
+  type: NodePort
+  selector:
+    app: api-server
+  ports:
+  - protocol: TCP
+    port: 8000
+    targetPort: 8000
+    name: http
+
+---
+# Backend Config for Cloud Load Balancer
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: orchestrator-backend-config
+  namespace: ai-employee
+spec:
+  healthCheck:
+    checkIntervalSec: 15
+    timeoutSec: 10
+    healthyThreshold: 2
+    unhealthyThreshold: 3
+    type: HTTP
+    requestPath: /health
+    port: 8000
+  connectionDraining:
+    drainingTimeoutSec: 60
+  timeoutSec: 300
+
+---
+# Horizontal Pod Autoscaler for Orchestrator
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: orchestrator-hpa
+  namespace: ai-employee
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: orchestrator
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 30
+
+---
+# Pod Disruption Budget (ensures high availability)
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: orchestrator-pdb
+  namespace: ai-employee
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: orchestrator
+
+---
+# Network Policy (optional - restrict traffic)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ai-employee-network-policy
+  namespace: ai-employee
+spec:
+  podSelector:
+    matchLabels:
+      tier: platinum
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ai-employee
+    ports:
+    - protocol: TCP
+      port: 8000
+  egress:
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 443  # HTTPS
+    - protocol: TCP
+      port: 80   # HTTP

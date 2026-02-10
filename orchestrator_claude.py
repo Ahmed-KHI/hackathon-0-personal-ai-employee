@@ -22,11 +22,15 @@ import schedule
 from anthropic import Anthropic
 from dotenv import load_dotenv
 
-# Add MCP servers to Python path
+# Add MCP servers and orchestration to Python path
 sys.path.append(str(Path(__file__).parent / "mcp_servers"))
+sys.path.append(str(Path(__file__).parent / "orchestration"))
 
 # Load environment variables
 load_dotenv()
+
+# Import ActionExecutor
+from action_executor import ActionExecutor
 
 # Setup logging
 logging.basicConfig(
@@ -65,6 +69,9 @@ class Orchestrator:
                        self.pending_approval, self.approved, self.rejected,
                        self.logs, self.in_progress, self.briefings]:
             folder.mkdir(parents=True, exist_ok=True)
+        
+        # Initialize ActionExecutor
+        self.action_executor = ActionExecutor(self.vault_path)
         
         logger.info(f"Orchestrator initialized with vault: {self.vault_path}")
     
@@ -181,6 +188,7 @@ Respond with the complete plan and any files you would create.
     def _save_plan_from_response(self, task_id: str, response_text: str):
         """
         Extract and save the plan from Claude's response to /Plans folder
+        Then parse and execute actions via ActionExecutor
         """
         try:
             # Save the full response as the plan
@@ -200,11 +208,44 @@ status: completed
             plan_file.write_text(plan_content, encoding='utf-8')
             logger.info(f"Saved plan to {plan_file}")
             
+            # NEW: Parse and execute actions from plan
+            self._execute_plan_actions(plan_file)
+            
             # Update Dashboard
             self._update_dashboard_with_task(task_id, "completed")
             
         except Exception as e:
             logger.error(f"Failed to save plan for {task_id}: {e}")
+    
+    def _execute_plan_actions(self, plan_file: Path):
+        """
+        Parse plan for executable actions and process them via ActionExecutor
+        """
+        try:
+            # Extract actions from plan
+            actions = self.action_executor.parse_plan_for_actions(plan_file)
+            
+            if not actions:
+                logger.info(f"No executable actions found in {plan_file.name}")
+                return
+            
+            logger.info(f"Found {len(actions)} action(s) to execute from {plan_file.name}")
+            
+            # Execute each action
+            for action in actions:
+                logger.info(f"Processing action: {action['action_type']} (approval required: {action['requires_approval']})")
+                
+                result = self.action_executor.execute_action(action)
+                
+                if result['status'] == 'success':
+                    logger.info(f"✅ Action executed successfully: {result['message']}")
+                elif result['status'] == 'requires_approval':
+                    logger.info(f"⏸️  Action requires approval: {result['message']}")
+                else:
+                    logger.error(f"❌ Action failed: {result['message']}")
+                    
+        except Exception as e:
+            logger.error(f"Error executing plan actions: {e}")
     
     def _update_dashboard_with_task(self, task_id: str, status: str):
         """
@@ -243,6 +284,37 @@ Last Updated: {datetime.now(timezone.utc).isoformat()}
         """
         # Process approved actions
         for approved_file in self.approved.glob("*.md"):
+            try:
+                self.execute_approved_action(approved_file)
+                # Move to /Done after execution
+                dest = self.done / approved_file.name
+                approved_file.rename(dest)
+                logger.info(f"Executed and archived approved action: {approved_file.name}")
+            except Exception as e:
+                logger.error(f"Failed to execute approved action {approved_file.name}: {e}")
+        
+        # Process rejections
+        for rejected_file in self.rejected.glob("*.md"):
+            self.log_rejection(rejected_file)
+            dest = self.done / rejected_file.name
+            rejected_file.rename(dest)
+            logger.info(f"Logged rejection: {rejected_file.name}")
+    
+    def execute_approved_action(self, approval_file: Path):
+        """Execute an approved action via ActionExecutor"""
+        try:
+            logger.info(f"Processing approved action: {approval_file.name}")
+            
+            # Use ActionExecutor to process approved file
+            result = self.action_executor.process_approved_file(approval_file)
+            
+            if result['status'] == 'success':
+                logger.info(f"✅ Approved action executed: {result['message']}")
+            else:
+                logger.error(f"❌ Approved action failed: {result['message']}")
+                
+        except Exception as e:
+            logger.error(f"Error executing approved action: {e}")
             try:
                 self.execute_approved_action(approved_file)
                 # Move to /Done after execution

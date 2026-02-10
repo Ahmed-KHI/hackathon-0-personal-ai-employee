@@ -1,0 +1,123 @@
+---
+# CronJob for daily backups to Cloud Storage
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: vault-backup
+  namespace: ai-employee
+spec:
+  schedule: "0 2 * * *"  # 2 AM daily
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: vault-backup
+        spec:
+          serviceAccountName: ai-employee-ksa
+          containers:
+          - name: backup
+            image: google/cloud-sdk:alpine
+            command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Starting backup at $(date)"
+              
+              # Set date
+              BACKUP_DATE=$(date +%Y%m%d-%H%M%S)
+              
+              # Backup vaults
+              gsutil -m rsync -r /app/vaults gs://${GCS_VAULT_BUCKET}/backups/${BACKUP_DATE}/vaults
+              
+              # Backup audit logs
+              gsutil -m rsync -r /app/audit_logs gs://${GCS_AUDIT_BUCKET}/backups/${BACKUP_DATE}/audit_logs
+              
+              # Create backup manifest
+              cat > /tmp/manifest.json <<EOF
+              {
+                "backup_date": "${BACKUP_DATE}",
+                "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+                "vault_size_bytes": $(du -sb /app/vaults | cut -f1),
+                "audit_size_bytes": $(du -sb /app/audit_logs | cut -f1),
+                "status": "success"
+              }
+              EOF
+              
+              gsutil cp /tmp/manifest.json gs://${GCS_VAULT_BUCKET}/backups/${BACKUP_DATE}/manifest.json
+              
+              echo "Backup completed successfully"
+              
+              # Cleanup old backups (keep last 30 days)
+              gsutil ls gs://${GCS_VAULT_BUCKET}/backups/ | head -n -30 | xargs -r gsutil -m rm -r
+            env:
+            - name: GCS_VAULT_BUCKET
+              valueFrom:
+                configMapKeyRef:
+                  name: ai-employee-config
+                  key: GCS_VAULT_BUCKET
+            - name: GCS_AUDIT_BUCKET
+              valueFrom:
+                configMapKeyRef:
+                  name: ai-employee-config
+                  key: GCS_AUDIT_BUCKET
+            volumeMounts:
+            - name: vaults
+              mountPath: /app/vaults
+              readOnly: true
+            - name: audit-logs
+              mountPath: /app/audit_logs
+              readOnly: true
+          volumes:
+          - name: vaults
+            persistentVolumeClaim:
+              claimName: ai-employee-vaults
+          - name: audit-logs
+            persistentVolumeClaim:
+              claimName: ai-employee-logs
+          restartPolicy: OnFailure
+
+---
+# CronJob for monitoring alerting
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: health-monitor
+  namespace: ai-employee
+spec:
+  schedule: "*/5 * * * *"  # Every 5 minutes
+  concurrencyPolicy: Allow
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: health-monitor
+        spec:
+          containers:
+          - name: monitor
+            image: curlimages/curl:latest
+            command:
+            - /bin/sh
+            - -c
+            - |
+              # Check orchestrator health
+              if ! curl -f http://orchestrator-service:8000/health; then
+                echo "ALERT: Orchestrator health check failed at $(date)"
+                # Send alert (implement your alerting here)
+                exit 1
+              fi
+              
+              # Check API health
+              if ! curl -f http://api-service:8000/health; then
+                echo "ALERT: API health check failed at $(date)"
+                exit 1
+              fi
+              
+              echo "All health checks passed at $(date)"
+          restartPolicy: OnFailure

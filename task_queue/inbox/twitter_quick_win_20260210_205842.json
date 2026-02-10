@@ -1,0 +1,12 @@
+{
+  "task_id": "twitter_quick_win_20260210_205842",
+  "task_type": "twitter_action",
+  "trigger": "quick_win",
+  "priority": "medium",
+  "created_at": "2026-02-10T20:58:42.067516",
+  "content": {
+    "win_description": "LINKEDIN_post_20260210_152841",
+    "context": "---\ntype: linkedin_post\ncreated: 2026-02-10t15:28:41.642424+00:00\nsource: linkedin_watcher\npriority: medium\nrequires_approval: true\n---\n\n# linkedin business post - opportunity detected\n\n## posting opportunities\n\n### project completion (priority: high)\n- data: [\n  {\n    \"file\": \"instagram_integration_complete.md\",\n    \"timestamp\": \"2026-02-09t17:36:19.370058+00:00\"\n  }\n]\n\n\n## instructions for claude\n\n1. **analyze** the opportunities above\n2. **read** business_goals.md for context\n3. **read** comp"
+  },
+  "instructions": "Review obsidian_vault/agent_skills/twitter_skills.md for posting guidelines.\n\nTask: Share quick win on Twitter\n\nWin: LINKEDIN_post_20260210_152841\nContext: ---\ntype: linkedin_post\ncreated: 2026-02-10t15:28:41.642424+00:00\nsource: linkedin_watcher\npriority: medium\nrequires_approval: true\n---\n\n# linkedin business post - opportunity detected\n\n## posting opportunities\n\n### project completion (priority: high)\n- data: [\n  {\n    \"file\": \"instagram_integration_complete.md\",\n    \"timestamp\": \"2026-02-09t17:36:19.370058+00:00\"\n  }\n]\n\n\n## instructions for claude\n\n1. **analyze** the opportunities above\n2. **read** business_goals.md for context\n3. **read** comp\n\nAction Steps:\n1. Identify core achievement (completed project, client win, milestone)\n2. Write celebratory but professional tweet\n3. Use 1 emoji opener (\ud83c\udf89 \u2705 \ud83d\ude80)\n4. Keep under 250 characters for easy RT\n5. Tag relevant people/companies if appropriate (max 2 tags)\n6. Add 2-3 hashtags\n7. Auto-approve if non-sensitive\n8. Post and engage with responses\n\nTweet Tone:\n- Excited but not boastful\n- Specific outcome, not vague \"great work\"\n- Give credit to team/client where appropriate\n- Invite engagement (\"What's your approach?\")\n"
+}

@@ -1,0 +1,13 @@
+{
+  "task_id": "facebook_project_completion_20260211_002931",
+  "task_type": "facebook_action",
+  "trigger": "project_completion",
+  "priority": "medium",
+  "created_at": "2026-02-11T00:29:31.004269",
+  "content": {
+    "project_file": "LINKEDIN_post_20260210_172841.md",
+    "content_preview": "---\ntype: linkedin_post\ncreated: 2026-02-10T17:28:41.847872+00:00\nsource: linkedin_watcher\npriority: medium\nrequires_approval: true\n---\n\n# LinkedIn Business Post - Opportunity Detected\n\n## Posting Opportunities\n\n### Project Completion (Priority: high)\n- Data: [\n  {\n    \"file\": \"APPROVAL_social_post_"
+  },
+  "instructions": "Review obsidian_vault/agent_skills/facebook_skills.md for posting guidelines.\n\nTask: Announce project completion on Facebook\n\nProject: LINKEDIN_post_20260210_172841.md\nPreview: ---\ntype: linkedin_post\ncreated: 2026-02-10T17:28:41.847872+00:00\nsource: linkedin_watcher\npriority: medium\nrequires_approval: true\n---\n\n# LinkedIn Business Post - Opportunity Detected\n\n## Posting Opportunities\n\n### Project Completion (Priority: high)\n- Data: [\n  {\n    \"file\": \"APPROVAL_social_post_\n\nAction Steps:\n1. Read full project details from /Done/LINKEDIN_post_20260210_172841.md\n2. Create engaging Facebook post highlighting:\n   - Project achievement and outcome\n   - Business value delivered\n   - Customer impact (if applicable)\n   - Call-to-action (contact, learn more, etc.)\n3. Use professional yet relatable tone\n4. Include relevant hashtags (3-5)\n5. Keep within 300-500 characters for optimal engagement\n6. Requires HITL approval before posting (see facebook_skills.md)\n7. Post via facebook_server.py post_message\n8. Log result in audit trail\n\nPost Tone:\n- Professional but approachable\n- Emphasize value and impact\n- Gratitude to team/client where appropriate\n- Forward-looking statement\n- Community engagement element\n",
+  "requires_approval": true
+}

@@ -1,0 +1,215 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ai-employee
+  labels:
+    name: ai-employee
+    tier: platinum
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ai-employee-config
+  namespace: ai-employee
+data:
+  VAULT_PATH: "/app/vaults/tenant_default"
+  ENABLE_ENCRYPTION: "false"
+  LOG_LEVEL: "INFO"
+  ORCHESTRATOR_CYCLE_SECONDS: "30"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ai-employee-secrets
+  namespace: ai-employee
+type: Opaque
+stringData:
+  ANTHROPIC_API_KEY: "your-api-key-here"  # Replace with actual key
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ai-employee-vaults
+  namespace: ai-employee
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ai-employee-logs
+  namespace: ai-employee
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: standard
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orchestrator
+  namespace: ai-employee
+  labels:
+    app: orchestrator
+    tier: platinum
+spec:
+  replicas: 2  # High availability
+  selector:
+    matchLabels:
+      app: orchestrator
+  template:
+    metadata:
+      labels:
+        app: orchestrator
+        tier: platinum
+    spec:
+      containers:
+      - name: orchestrator
+        image: personal-ai-employee:latest
+        imagePullPolicy: Always
+        command: ["python", "orchestrator_claude.py"]
+        envFrom:
+        - configMapRef:
+            name: ai-employee-config
+        - secretRef:
+            name: ai-employee-secrets
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        volumeMounts:
+        - name: vaults
+          mountPath: /app/vaults
+        - name: logs
+          mountPath: /app/logs
+        livenessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import os; exit(0 if os.path.exists('logs/orchestrator.log') else 1)"
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import os; exit(0 if os.path.exists('logs/orchestrator.log') else 1)"
+          initialDelaySeconds: 20
+          periodSeconds: 10
+      volumes:
+      - name: vaults
+        persistentVolumeClaim:
+          claimName: ai-employee-vaults
+      - name: logs
+        persistentVolumeClaim:
+          claimName: ai-employee-logs
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: watcher-filesystem
+  namespace: ai-employee
+  labels:
+    app: watcher-filesystem
+    tier: platinum
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: watcher-filesystem
+  template:
+    metadata:
+      labels:
+        app: watcher-filesystem
+        tier: platinum
+    spec:
+      containers:
+      - name: watcher
+        image: personal-ai-employee:latest
+        imagePullPolicy: Always
+        command: ["python", "watcher_filesystem.py"]
+        envFrom:
+        - configMapRef:
+            name: ai-employee-config
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        volumeMounts:
+        - name: vaults
+          mountPath: /app/vaults
+        - name: logs
+          mountPath: /app/logs
+      volumes:
+      - name: vaults
+        persistentVolumeClaim:
+          claimName: ai-employee-vaults
+      - name: logs
+        persistentVolumeClaim:
+          claimName: ai-employee-logs
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: orchestrator-service
+  namespace: ai-employee
+spec:
+  selector:
+    app: orchestrator
+  ports:
+  - protocol: TCP
+    port: 8000
+    targetPort: 8000
+  type: LoadBalancer
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: orchestrator-hpa
+  namespace: ai-employee
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: orchestrator
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80

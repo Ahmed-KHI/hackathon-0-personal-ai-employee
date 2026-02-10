@@ -1,0 +1,124 @@
+steps:
+  # Step 1: Build Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-image'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/personal-ai-employee:$COMMIT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/personal-ai-employee:latest'
+      - '-f'
+      - 'Dockerfile'
+      - '.'
+    timeout: 600s
+
+  # Step 2: Push image to GCR
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-image'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/personal-ai-employee:$COMMIT_SHA'
+    waitFor: ['build-image']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-latest'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/personal-ai-employee:latest'
+    waitFor: ['build-image']
+
+  # Step 3: Run tests (optional)
+  - name: 'gcr.io/$PROJECT_ID/personal-ai-employee:$COMMIT_SHA'
+    id: 'run-tests'
+    entrypoint: 'python'
+    args: ['-m', 'pytest', 'tests/', '-v']
+    waitFor: ['push-image']
+    # Continue on failure for now
+    allowFailure: true
+
+  # Step 4: Update Kubernetes deployment
+  - name: 'gcr.io/cloud-builders/gke-deploy'
+    id: 'deploy-to-gke'
+    args:
+      - 'run'
+      - '--filename=gcp/gke-deployment.yaml'
+      - '--image=gcr.io/$PROJECT_ID/personal-ai-employee:$COMMIT_SHA'
+      - '--location=$_CLUSTER_LOCATION'
+      - '--cluster=$_CLUSTER_NAME'
+      - '--namespace=ai-employee'
+    waitFor: ['push-image', 'push-latest']
+
+  # Step 5: Verify deployment
+  - name: 'gcr.io/cloud-builders/kubectl'
+    id: 'verify-deployment'
+    args:
+      - 'rollout'
+      - 'status'
+      - 'deployment/orchestrator'
+      - '-n'
+      - 'ai-employee'
+    env:
+      - 'CLOUDSDK_COMPUTE_REGION=$_CLUSTER_LOCATION'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=$_CLUSTER_NAME'
+    waitFor: ['deploy-to-gke']
+
+  # Step 6: Health check
+  - name: 'gcr.io/cloud-builders/curl'
+    id: 'health-check'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        # Get service IP
+        export SERVICE_IP=$(gcloud container clusters get-credentials $_CLUSTER_NAME --zone=$_CLUSTER_LOCATION && kubectl get service orchestrator-service -n ai-employee -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+        echo "Service IP: $${SERVICE_IP}"
+        
+        # Wait for service to be ready
+        for i in {1..30}; do
+          if curl -f "http://$${SERVICE_IP}:8000/health"; then
+            echo "Health check passed!"
+            exit 0
+          fi
+          echo "Waiting for service... ($i/30)"
+          sleep 10
+        done
+        
+        echo "Health check failed after 5 minutes"
+        exit 1
+    waitFor: ['verify-deployment']
+    timeout: 600s
+
+# Substitution variables
+substitutions:
+  _CLUSTER_NAME: 'ai-employee-cluster'
+  _CLUSTER_LOCATION: 'us-central1-a'
+
+# Build options
+options:
+  machineType: 'N1_HIGHCPU_8'
+  diskSizeGb: 100
+  logging: CLOUD_LOGGING_ONLY
+  substitutionOption: 'ALLOW_LOOSE'
+
+# Timeout
+timeout: 1800s
+
+# Images to store
+images:
+  - 'gcr.io/$PROJECT_ID/personal-ai-employee:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/personal-ai-employee:latest'
+
+# Artifacts (logs, reports)
+artifacts:
+  objects:
+    location: 'gs://$PROJECT_ID-build-artifacts'
+    paths:
+      - 'logs/*.log'
+      - 'test_results/*.json'
+
+# Tags for organization
+tags:
+  - 'ai-employee'
+  - 'platinum-tier'
+  - 'gke-deployment'

@@ -2,49 +2,39 @@
   "tweets": [
     {
       "type": "quick_win",
-      "content_key": "quick_win:FILE_invoice_generation.txt.md",
-      "timestamp": "2026-02-08T20:10:47.339382"
-    },
-    {
-      "type": "quick_win",
-      "content_key": "quick_win:FILE_urgent_payment.txt.md",
-      "timestamp": "2026-02-08T20:10:47.343381"
-    },
-    {
-      "type": "quick_win",
-      "content_key": "quick_win:TASK_business_improvement.md",
-      "timestamp": "2026-02-08T20:10:47.348841"
-    },
-    {
-      "type": "quick_win",
-      "content_key": "quick_win:TASK_email_client_invoice.md",
-      "timestamp": "2026-02-08T20:10:47.350843"
-    },
-    {
-      "type": "quick_win",
-      "content_key": "quick_win:TASK_website_project.md",
-      "timestamp": "2026-02-08T20:10:47.353844"
+      "content_key": "quick_win:Instagram_Integration_Complete.md",
+      "timestamp": "2026-02-10T20:28:41.987323"
     },
     {
       "type": "insight",
-      "content_key": "insight:FILE_social_media_analysis.txt.md",
-      "timestamp": "2026-02-08T20:10:47.359842"
+      "content_key": "insight:FACEBOOK_milestone_post.md",
+      "timestamp": "2026-02-10T20:28:41.990870"
     },
     {
-      "type": "insight",
-      "content_key": "insight:TASK_business_improvement.md",
-      "timestamp": "2026-02-08T20:10:47.364300"
+      "type": "quick_win",
+      "content_key": "quick_win:Instagram_Integration_Post.md",
+      "timestamp": "2026-02-10T20:58:42.065444"
     },
     {
-      "type": "insight",
-      "content_key": "insight:TASK_email_client_invoice.md",
-      "timestamp": "2026-02-08T20:10:47.368204"
+      "type": "quick_win",
+      "content_key": "quick_win:LINKEDIN_post_20260210_152841.md",
+      "timestamp": "2026-02-10T20:58:42.068123"
     },
     {
-      "type": "insight",
-      "content_key": "insight:TASK_financial_review.md",
-      "timestamp": "2026-02-08T20:10:47.372206"
+      "type": "quick_win",
+      "content_key": "quick_win:APPROVAL_social_post_TEST_linkedin_post_manual_20260210_160418.approved.md",
+      "timestamp": "2026-02-10T21:28:42.089867"
+    },
+    {
+      "type": "quick_win",
+      "content_key": "quick_win:APPROVAL_social_post_TEST_linkedin_post_manual_20260210_160549.approved.md",
+      "timestamp": "2026-02-10T21:28:42.103513"
+    },
+    {
+      "type": "quick_win",
+      "content_key": "quick_win:FILE_social_announcement_feb10.txt.md",
+      "timestamp": "2026-02-10T21:28:42.107512"
     }
   ],
-  "last_updated": "2026-02-08T20:10:47.372206"
+  "last_updated": "2026-02-10T21:28:42.107512"
 }

@@ -1,0 +1,36 @@
+---
+# Ingress with Google Cloud Load Balancer
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ai-employee-ingress
+  namespace: ai-employee
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.global-static-ip-name: "ai-employee-ip"
+    networking.gke.io/managed-certificates: "ai-employee-cert"
+    kubernetes.io/ingress.allow-http: "true"
+    ingress.gcp.kubernetes.io/pre-shared-cert: "ai-employee-cert"
+spec:
+  rules:
+  - host: api.yourcompany.com
+    http:
+      paths:
+      - path: /*
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: api-service
+            port:
+              number: 8000
+
+---
+# Managed Certificate (requires domain)
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: ai-employee-cert
+  namespace: ai-employee
+spec:
+  domains:
+    - api.yourcompany.com
