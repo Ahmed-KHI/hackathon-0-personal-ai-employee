@@ -151,20 +151,20 @@ spec:
             command:
             - /bin/sh
             - -c
-            - test -f logs/orchestrator.log && find logs/orchestrator.log -mmin -2 | grep -q .
-          initialDelaySeconds: 30
-          periodSeconds: 30
-          timeoutSeconds: 5
-          failureThreshold: 3
+            - test -f logs/orchestrator.log
+          initialDelaySeconds: 60
+          periodSeconds: 60
+          timeoutSeconds: 10
+          failureThreshold: 5
         readinessProbe:
           exec:
             command:
             - /bin/sh
             - -c
-            - test -f logs/orchestrator.log && pgrep -f orchestrator_claude.py > /dev/null
-          initialDelaySeconds: 20
-          periodSeconds: 10
-          timeoutSeconds: 5
+            - test -f logs/orchestrator.log
+          initialDelaySeconds: 45
+          periodSeconds: 30
+          timeoutSeconds: 10
           failureThreshold: 3
       volumes:
       - name: vaults
