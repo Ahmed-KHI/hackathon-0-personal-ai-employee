@@ -1,0 +1,27 @@
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Obsidian workspace files (user-specific)
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/hotkeys.json
+
+# Temporary files
+*.tmp
+*.temp
+~$*
+
+# Logs (too large, backed up separately)
+Logs/*.log
+
+# Private notes (if you add personal notes)
+Private/
+
+# Node modules (if using any Obsidian plugins)
+node_modules/
+
+# Build artifacts
+dist/
+build/
