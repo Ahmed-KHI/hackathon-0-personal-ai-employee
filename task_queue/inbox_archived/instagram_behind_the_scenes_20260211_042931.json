@@ -1,0 +1,14 @@
+{
+  "task_id": "instagram_behind_the_scenes_20260211_042931",
+  "task_type": "instagram_action",
+  "trigger": "behind_the_scenes",
+  "priority": "medium",
+  "created_at": "2026-02-11T04:29:31.632009",
+  "content": {
+    "item_name": "test_hybrid_e2e_001",
+    "item_path": "obsidian_vault\\Done\\test_hybrid_e2e_001.md",
+    "category": "behind_the_scenes",
+    "description": "---\ntask_id: test_hybrid_e2e_001\ntype: briefing\npriority: high\ncreated_at: 2026-02-11t04:25:00z\nsource: manual_test\n---\n\n# test task: hybrid architecture end-to-end\n\n## objective\ntest the complete hybrid architecture flow:\n1. local orchestrator detects this task\n2. claude code generates a briefing\n3"
+  },
+  "instructions": "Review obsidian_vault/agent_skills/instagram_skills.md for posting guidelines.\n\nTask: Share behind-the-scenes content on Instagram\n\nSubject: None\nContext: \n\nAction Steps:\n1. Select most authentic/candid photo from BTS content\n2. Write relatable caption showing process/journey\n3. Use BTS and educational hashtags\n4. Consider Stories format for ephemeral content\n5. Show tools, workspace, or team in action\n6. Auto-approve if positive/neutral (see instagram_skills.md)\n7. Post and engage with comments\n\nCaption Tone:\n- Authentic and human\n- Educational value (\"Here's how we...\")\n- Relatable struggles/wins\n- Conversational language\n- Invite questions/discussion\n"
+}

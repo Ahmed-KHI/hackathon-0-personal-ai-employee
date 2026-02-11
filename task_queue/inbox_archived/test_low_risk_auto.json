@@ -1,0 +1,11 @@
+{
+  "type": "briefing",
+  "source": "test_watcher",
+  "created": "2026-02-11T05:00:00Z",
+  "priority": "low",
+  "requires_approval": true,
+  "title": "Test Low-Risk Auto-Approval",
+  "description": "Testing risk-based auto-approval for low-risk briefing tasks",
+  "data": {},
+  "instructions": "Generate a daily briefing summary"
+}

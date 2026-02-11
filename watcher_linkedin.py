@@ -40,9 +40,10 @@ logger = logging.getLogger(__name__)
 class LinkedInWatcher:
     """Watch for opportunities to post business updates on LinkedIn"""
     
-    def __init__(self, vault_path: str = "./obsidian_vault"):
+    def __init__(self, vault_path: str = "./obsidian_vault", task_queue_path: str = "./task_queue"):
         self.vault = Path(vault_path)
-        self.needs_action = self.vault / "Needs_Action"
+        self.task_queue = Path(task_queue_path)
+        self.inbox = self.task_queue / "inbox"  # PLATINUM TIER: Create drafts, not direct tasks
         self.done = self.vault / "Done"
         self.business_goals = self.vault / "Business_Goals.md"
         
@@ -50,11 +51,12 @@ class LinkedInWatcher:
         self.check_interval = int(os.getenv('LINKEDIN_CHECK_INTERVAL_SECONDS', '3600'))  # 1 hour
         self.last_post_check = datetime.now(timezone.utc) - timedelta(days=1)
         
-        self.needs_action.mkdir(parents=True, exist_ok=True)
+        self.inbox.mkdir(parents=True, exist_ok=True)
         
-        logger.info(f"LinkedIn watcher initialized")
+        logger.info(f"LinkedIn watcher initialized (PLATINUM TIER: Draft-only mode)")
         logger.info(f"Check interval: {self.check_interval} seconds")
         logger.info(f"Token path: {self.token_path}")
+        logger.info(f"Draft inbox: {self.inbox}")
     
     def is_authenticated(self) -> bool:
         """Check if LinkedIn OAuth token exists"""
@@ -189,37 +191,22 @@ class LinkedInWatcher:
     
     def create_linkedin_post_task(self, opportunities: list):
         """
-        Create a task for Claude to generate LinkedIn post
+        Create a DRAFT task (JSON) in inbox for local review
+        
+        PLATINUM TIER SECURITY:
+        - Cloud watcher creates draft only (no direct execution)
+        - Local draft_reviewer.py creates human-readable draft
+        - Human approves before execution
+        - Ensures NO automatic cloud execution
         """
         if not opportunities:
             return
         
         timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
-        task_file = self.needs_action / f"LINKEDIN_post_{timestamp}.md"
+        task_file = self.inbox / f"linkedin_post_{timestamp}.json"
         
-        # Build task content
-        content = f"""---
-type: linkedin_post
-created: {datetime.now(timezone.utc).isoformat()}
-source: linkedin_watcher
-priority: medium
-requires_approval: true
----
-
-# LinkedIn Business Post - Opportunity Detected
-
-## Posting Opportunities
-
-"""
-        
-        for opp in opportunities:
-            content += f"### {opp['type'].replace('_', ' ').title()} (Priority: {opp['priority']})\n"
-            content += f"- Data: {json.dumps(opp['data'], indent=2)}\n\n"
-        
-        content += """
-## Instructions for Claude
-
-1. **Analyze** the opportunities above
+        # Build instructions for Claude
+        instructions = """1. **Analyze** the opportunities below
 2. **Read** Business_Goals.md for context
 3. **Read** Company_Handbook.md for brand voice
 4. **Generate** an engaging LinkedIn post that:
@@ -239,27 +226,38 @@ requires_approval: true
 - Use data/metrics when possible
 - Include visual suggestion (image/graphic)
 - Time-sensitive: Post within 24 hours for relevance
-- Target audience: Business decision-makers
-
-## Success Criteria
-
-- [ ] Post draft created
-- [ ] Approval request generated
-- [ ] Human review completed
-- [ ] Post scheduled/published
-
-<promise>TASK_COMPLETE</promise>
-"""
+- Target audience: Business decision-makers"""
+        
+        # Create task data structure
+        task_data = {
+            'type': 'linkedin_post',
+            'source': 'linkedin_watcher',
+            'created': datetime.now(timezone.utc).isoformat(),
+            'priority': 'medium',
+            'requires_approval': True,
+            'title': 'LinkedIn Business Post - Opportunity Detected',
+            'description': f'Found {len(opportunities)} posting opportunities from cloud watcher',
+            'data': {
+                'opportunities': opportunities,
+                'watcher': 'linkedin',
+                'mode': 'platinum_tier_draft'
+            },
+            'instructions': instructions,
+            'security_note': 'This is a DRAFT from cloud watcher. Requires local approval before execution.'
+        }
         
         try:
-            task_file.write_text(content, encoding='utf-8')
-            logger.info(f"✅ Created LinkedIn post task: {task_file.name}")
+            with open(task_file, 'w', encoding='utf-8') as f:
+                json.dump(task_data, f, indent=2, ensure_ascii=False)
+            
+            logger.info(f"✅ Created DRAFT task (JSON): {task_file.name}")
+            logger.info(f"   🔐 Draft will be reviewed locally before execution")
             
             # Update last check time
             self.last_post_check = datetime.now(timezone.utc)
             
         except Exception as e:
-            logger.error(f"Failed to create LinkedIn task: {e}")
+            logger.error(f"Failed to create LinkedIn draft task: {e}")
     
     def run(self):
         """Main watcher loop"""

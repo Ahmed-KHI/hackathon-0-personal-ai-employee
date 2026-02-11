@@ -1,0 +1,7 @@
+﻿{
+  "type": "linkedin_post",
+  "source": "linkedin_watcher",
+  "title": "Test Platinum Tier Split",
+  "description": "Testing cloud/local draft flow",
+  "priority": "medium"
+}
