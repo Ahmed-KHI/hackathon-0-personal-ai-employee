@@ -1,0 +1,12 @@
+Task: Reply to my LinkedIn message from Ahmed
+
+Context:
+- Ahmed sent: "Can we schedule a demo of your AI solution?"
+- He's a CEO of a tech company
+- We have 5 mutual connections
+- Response needed: Professional, enthusiastic
+
+Expected Action:
+- Offer calendar link
+- Add to CRM as warm lead
+- Follow up in 2 days if no response

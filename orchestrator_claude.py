@@ -15,6 +15,7 @@ import sys
 import time
 import json
 import logging
+import subprocess
 from pathlib import Path
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
@@ -79,15 +80,34 @@ class Orchestrator:
         """Scan /Needs_Action for new task files"""
         return list(self.needs_action.glob("*.md"))
     
-    def claim_task(self, task_file: Path) -> Path:
+    def claim_task(self, task_file: Path) -> Optional[Path]:
         """
         Claim-by-move: Move task from /Needs_Action to /In_Progress
         This prevents multiple agents from processing the same task
         """
-        dest = self.in_progress / task_file.name
-        task_file.rename(dest)
-        logger.info(f"Claimed task: {task_file.name}")
-        return dest
+        try:
+            dest = self.in_progress / task_file.name
+            
+            # Check if file still exists (race condition check)
+            if not task_file.exists():
+                logger.warning(f"Task file {task_file.name} no longer exists (already claimed?)")
+                return None
+            
+            # Check if destination already exists
+            if dest.exists():
+                logger.warning(f"Destination {dest.name} already exists, skipping claim")
+                return None
+            
+            task_file.rename(dest)
+            logger.info(f"Claimed task: {task_file.name}")
+            return dest
+            
+        except PermissionError as e:
+            logger.error(f"Permission denied claiming task {task_file.name}: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Error claiming task {task_file.name}: {e}")
+            return None
     
     def trigger_claude_code(self, task_file: Path) -> Dict:
         """
@@ -301,49 +321,36 @@ Last Updated: {datetime.now(timezone.utc).isoformat()}
             logger.info(f"Logged rejection: {rejected_file.name}")
     
     def execute_approved_action(self, approval_file: Path):
-        """Execute an approved action via ActionExecutor"""
+        """Execute an approved action via ActionExecutor and MCP servers"""
         try:
             logger.info(f"Processing approved action: {approval_file.name}")
             
-            # Use ActionExecutor to process approved file
+            # Try ActionExecutor first
             result = self.action_executor.process_approved_file(approval_file)
             
             if result['status'] == 'success':
                 logger.info(f"✅ Approved action executed: {result['message']}")
+                return
+            
+            # If ActionExecutor doesn't handle it, try legacy MCP servers
+            try:
+                content = approval_file.read_text(encoding='utf-8')
+            except UnicodeDecodeError:
+                logger.warning(f"Unicode error reading {approval_file.name}, trying with ignore")
+                content = approval_file.read_text(encoding='utf-8', errors='ignore')
+            
+            # Parse frontmatter to determine action type
+            if 'action: send_email' in content:
+                self.execute_email_action(content)
+            elif 'action: payment' in content:
+                self.execute_payment_action(content)
+            elif 'action: social_post' in content or 'action: linkedin_post' in content:
+                self.execute_social_action(content)
             else:
-                logger.error(f"❌ Approved action failed: {result['message']}")
+                logger.warning(f"Unknown action type in {approval_file.name}")
                 
         except Exception as e:
-            logger.error(f"Error executing approved action: {e}")
-            try:
-                self.execute_approved_action(approved_file)
-                # Move to /Done after execution
-                dest = self.done / approved_file.name
-                approved_file.rename(dest)
-                logger.info(f"Executed and archived approved action: {approved_file.name}")
-            except Exception as e:
-                logger.error(f"Failed to execute approved action {approved_file.name}: {e}")
-        
-        # Process rejections
-        for rejected_file in self.rejected.glob("*.md"):
-            self.log_rejection(rejected_file)
-            dest = self.done / rejected_file.name
-            rejected_file.rename(dest)
-            logger.info(f"Logged rejection: {rejected_file.name}")
-    
-    def execute_approved_action(self, approval_file: Path):
-        """Execute an approved action via appropriate MCP server"""
-        content = approval_file.read_text()
-        
-        # Parse frontmatter to determine action type
-        if 'action: send_email' in content:
-            self.execute_email_action(content)
-        elif 'action: payment' in content:
-            self.execute_payment_action(content)
-        elif 'action: social_post' in content or 'action: linkedin_post' in content:
-            self.execute_social_action(content)
-        else:
-            logger.warning(f"Unknown action type in {approval_file.name}")
+            logger.error(f"Error executing approved action {approval_file.name}: {e}")
     
     def execute_email_action(self, content: str):
         """Execute email send via email MCP server"""
@@ -496,22 +503,38 @@ Last Updated: {datetime.now(timezone.utc).isoformat()}
     
     def log_action(self, action_data: Dict):
         """Write action to /Logs/YYYY-MM-DD.json (audit trail)"""
-        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-        log_file = self.logs / f"{today}.json"
-        
-        log_entry = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            **action_data
-        }
-        
-        # Append to daily log file
-        if log_file.exists():
-            logs = json.loads(log_file.read_text())
-        else:
-            logs = []
-        
-        logs.append(log_entry)
-        log_file.write_text(json.dumps(logs, indent=2))
+        try:
+            today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+            log_file = self.logs / f"{today}.json"
+            
+            log_entry = {
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                **action_data
+            }
+            
+            # Append to daily log file
+            try:
+                if log_file.exists():
+                    logs = json.loads(log_file.read_text(encoding='utf-8'))
+                else:
+                    logs = []
+            except json.JSONDecodeError as e:
+                logger.error(f"Corrupted log file {log_file}, starting fresh: {e}")
+                logs = []
+            except Exception as e:
+                logger.error(f"Error reading log file {log_file}: {e}")
+                logs = []
+            
+            logs.append(log_entry)
+            
+            try:
+                log_file.write_text(json.dumps(logs, indent=2, ensure_ascii=False), encoding='utf-8')
+                logger.debug(f"Action logged to {log_file}")
+            except Exception as e:
+                logger.error(f"Failed to write to log file {log_file}: {e}")
+                
+        except Exception as e:
+            logger.error(f"Unexpected error in log_action: {e}")
     
     def generate_ceo_briefing(self):
         """
@@ -576,13 +599,25 @@ Use the CEO Briefing template from planning_skills.md.
                 # Claim the task
                 claimed_task = self.claim_task(task_file)
                 
+                # Skip if claim failed (race condition or error)
+                if claimed_task is None:
+                    logger.warning(f"Failed to claim task {task_file.name}, skipping")
+                    continue
+                
                 # Trigger Claude Code to process
                 result = self.trigger_claude_code(claimed_task)
                 
                 if result["status"] == "complete":
                     # Move to /Done on successful completion
-                    dest = self.done / claimed_task.name
-                    claimed_task.rename(dest)
+                    try:
+                        dest = self.done / claimed_task.name
+                        if claimed_task.exists():
+                            claimed_task.rename(dest)
+                            logger.info(f"Task {claimed_task.name} moved to Done")
+                        else:
+                            logger.warning(f"Task file {claimed_task.name} disappeared before archiving")
+                    except Exception as e:
+                        logger.error(f"Failed to move completed task to Done: {e}")
                 elif result["status"] in ["incomplete", "timeout", "error"]:
                     # Leave in /In_Progress for retry or human intervention
                     logger.warning(f"Task {claimed_task.name} needs attention")

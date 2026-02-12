@@ -8,6 +8,19 @@
 
 ---
 
+## 🎬 Demo Video
+
+**Watch the complete system demonstration on YouTube:**
+
+[![Watch Demo](https://img.shields.io/badge/▶️_Watch_Demo-YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/yC-aghjREx4)
+
+**Video URL**: https://youtu.be/yC-aghjREx4
+
+**Duration**: 10 minutes  
+**Content**: Live vault tour, system running, task processing, LinkedIn/Facebook proof, GKE deployment, security model, code walkthrough
+
+---
+
 ## 🎯 Achievement Summary
 
 ### ✅ All Platinum Requirements Met

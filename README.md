@@ -30,6 +30,28 @@
 
 ---
 
+## 🎬 Demo Video
+
+<div align="center">
+
+### **Watch the Full System in Action**
+
+[![Personal AI Employee - Demo Video](https://img.shields.io/badge/▶️_Watch_Demo-YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/yC-aghjREx4)
+
+**10-minute comprehensive demonstration** showcasing:
+- ✅ Live Obsidian vault tour with real-time Dashboard
+- ✅ System running 24/7 with orchestrator logs
+- ✅ End-to-end task processing (file drop → AI plan generation)
+- ✅ Live proof: LinkedIn, Facebook, and GKE deployment
+- ✅ Security architecture walkthrough (3-layer model)
+- ✅ Code deep-dive: orchestrator, MCP servers, agent skills
+
+🔗 **Direct Link**: https://youtu.be/yC-aghjREx4
+
+</div>
+
+---
+
 ## 📋 Table of Contents
 
 - [Overview](#-overview)

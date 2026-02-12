@@ -2,7 +2,18 @@
 
 **Personal AI Employee - Platinum Tier**  
 **Deployed to Google Cloud Platform**  
-**Date**: February 10, 2026
+**Date**: February 10, 2026  
+**Demo Video**: 🎬 https://youtu.be/yC-aghjREx4
+
+---
+
+## 🎬 Watch the Live System
+
+**See this deployment in action:**
+
+[![Watch Demo Video](https://img.shields.io/badge/▶️_Watch_Live_System-YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/yC-aghjREx4)
+
+**10-minute demonstration** showing GKE cluster, workloads, services, and live API endpoint!
 
 ---
 

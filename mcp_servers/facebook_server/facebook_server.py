@@ -92,7 +92,10 @@ class FacebookServer:
         
         endpoint = f"{self.page_id}/feed"
         
-        data = {'message': message}
+        data = {
+            'message': message,
+            'published': True  # Ensure post is published publicly, not as draft
+        }
         if link:
             data['link'] = link
         
@@ -131,7 +134,8 @@ class FacebookServer:
         
         data = {
             'url': photo_url,
-            'message': message
+            'message': message,
+            'published': True  # Ensure photo is published publicly, not as draft
         }
         
         result = self._make_request('POST', endpoint, data=data)

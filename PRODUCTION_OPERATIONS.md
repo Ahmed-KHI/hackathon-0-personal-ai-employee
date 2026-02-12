@@ -3,7 +3,19 @@
 **Last Updated**: February 2026  
 **Cluster**: ai-employee-cluster (us-central1-a)  
 **Project**: personal-ai-employee-487018  
-**Tier**: Silver → Gold (Production)  
+**Tier**: 💎 Platinum (Production)  
+**Status**: ✅ Running 24/7  
+**Demo Video**: 🎬 https://youtu.be/yC-aghjREx4
+
+---
+
+## 🎬 System Overview Video
+
+**Watch the complete system demonstration:**
+
+[![Watch Demo](https://img.shields.io/badge/▶️_Watch_on_YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/yC-aghjREx4)
+
+This video shows the live production system including GKE deployment, monitoring, and operations.
 
 ---
 
