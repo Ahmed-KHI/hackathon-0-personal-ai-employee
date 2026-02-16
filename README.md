@@ -82,6 +82,28 @@ The Personal AI Employee autonomously handles:
 - 🔄 **Task Automation**: Processes files, generates plans, executes actions
 - 🔐 **Security**: Human-in-the-loop approvals for sensitive operations
 
+### 🧠 Intelligence Architecture: Zero "Vibe Coding"
+
+**Key Innovation**: All AI intelligence is **explicitly documented** as reusable skills, not hardcoded logic.
+
+```python
+# Every task specifies which skills to use
+task = {
+    'type': 'email',
+    'required_skills': ['email_skills', 'email_triage_skill', 'approval_skills']
+}
+# ✅ Claude reasons WITH documented rules → Consistent, auditable decisions
+# ❌ NO ad-hoc guessing or "vibe coding"
+```
+
+**Result**: 16 agent skills (1,500+ lines of structured intelligence) ensure every decision is:
+- ✅ Traceable to documented rules
+- ✅ Version-controlled and auditable
+- ✅ Modifiable without code changes
+- ✅ Reproducible across tasks
+
+**Safety Net**: `skill_mapper.py` auto-detects required skills if watchers miss them (defense-in-depth).
+
 ### 🏆 Competition Status
 
 **Tier**: Platinum (Highest Achievable)  
@@ -137,7 +159,8 @@ The Personal AI Employee autonomously handles:
 - ✅ Working filesystem watcher monitoring watch_inbox/
 - ✅ Claude Sonnet 4.5 integration via Anthropic API
 - ✅ Complete folder structure (/Needs_Action, /In_Progress, /Plans, /Done)
-- ✅ All AI functionality implemented as Agent Skills (11 skill files)
+- ✅ All AI functionality implemented as Agent Skills (16 skill files)
+- ✅ **Zero Vibe Coding**: Skill mapper ensures all tasks use documented intelligence
 
 ### 🥈 Silver Tier - Production Ready (COMPLETE ✅)
 - ✅ Multiple watchers (Gmail + Filesystem + Social Media)
@@ -422,30 +445,74 @@ New-Item -Path "watch_inbox\linkedin_post.txt" -Value "Share our latest achievem
 - **Secret Separation**: Cloud vs. local credential isolation
 - **10-Minute Breach Recovery**: Revoke cloud tokens instantly
 
-### 📚 Agent Skills
+### 📚 Agent Skills - Intelligence as Code
 
-All intelligence is version-controlled as Markdown:
+All intelligence is version-controlled as Markdown files. **Zero hardcoded logic** in Python.
+
+#### 🎯 Core Architecture: No Vibe Coding
+
+Every task explicitly loads agent skills using `required_skills` field:
+
+```python
+# ✅ CORRECT: Explicit skill loading
+task = {
+    'task_id': 'email_urgent_client',
+    'type': 'email',
+    'required_skills': ['email_skills', 'email_triage_skill', 'approval_skills']
+}
+# Claude reasons WITH documented rules, not ad-hoc guessing
+
+# ❌ WRONG: Vibe coding (NOT USED)
+task = {'task_id': 'email_urgent_client', 'type': 'email'}
+# Claude would guess what to do (unreliable, not reproducible)
+```
+
+**Safety Net**: `skill_mapper.py` auto-detects skills if watchers miss them (defense-in-depth).
+
+#### 📂 Available Skills (16 Total)
 
 ```
 obsidian_vault/agent_skills/
-├── email_skills.md          # Email response patterns
-├── finance_skills.md        # Financial analysis rules
-├── social_skills.md         # Social media best practices
-├── planning_skills.md       # Task breakdown templates
-├── approval_skills.md       # HITL decision criteria
-├── linkedin_skills.md       # LinkedIn posting guidelines
-├── facebook_skills.md       # Facebook content strategy
-├── instagram_skills.md      # Instagram best practices
-├── twitter_skills.md        # Twitter/X engagement rules
-├── odoo_skills.md          # Accounting workflows
-└── README.md               # Skills documentation
+├── 📧 Communication Skills
+│   ├── email_skills.md              # Email response patterns & templates
+│   ├── email_triage_skill.md        # 🆕 Priority detection algorithm (Critical/High/Normal/Low)
+│   └── social_skills.md             # General communication best practices
+│
+├── 📱 Social Media Skills
+│   ├── linkedin_skills.md           # LinkedIn posting guidelines
+│   ├── facebook_skills.md           # Facebook content strategy
+│   ├── instagram_skills.md          # Instagram best practices
+│   ├── twitter_skills.md            # Twitter/X engagement rules
+│   └── social_approval_checklist.md # 🆕 6-step brand voice validation
+│
+├── 💰 Finance & Accounting Skills
+│   ├── finance_skills.md            # Financial analysis rules
+│   ├── odoo_skills.md              # Odoo ERP technical operations
+│   └── invoice_workflow_skill.md    # 🆕 7-step invoice processing workflow
+│
+├── 🎯 Planning & Execution Skills
+│   ├── planning_skills.md           # Task breakdown templates
+│   ├── task_decomposition_skill.md  # 🆕 Multi-step work decomposition framework
+│   ├── file_analysis_skill.md       # 🆕 Document processing intelligence
+│   └── approval_skills.md           # HITL decision criteria
+│
+└── README.md                        # Skills architecture documentation
 ```
 
+#### 🚀 How Skills Work
+
+1. **Watcher** creates task with `required_skills: ['email_skills', 'approval_skills']`
+2. **Orchestrator** loads skill files from vault
+3. **Skill Mapper** validates/auto-adds missing skills (safety net)
+4. **Claude** receives skills as context → reasons WITH structured rules
+5. **Result**: Consistent, auditable, reproducible decisions
+
 **Benefits**:
-- 🔍 Transparent: All logic is human-readable
-- 📝 Version-controlled: Every change is tracked
-- 🔄 Modifiable: Update behavior without code changes
-- 🧪 Testable: Skills can be validated independently
+- 🔍 **Transparent**: All logic is human-readable Markdown
+- 📝 **Version-controlled**: Every intelligence change tracked in git
+- 🔄 **Modifiable**: Update AI behavior without touching code
+- 🧪 **Testable**: Skills can be validated independently
+- 🚫 **No Vibe Coding**: Every decision traceable to documented rule
 
 ---
 
@@ -632,7 +699,7 @@ See complete guide: [GCP_DEPLOYMENT_COMPLETE.md](GCP_DEPLOYMENT_COMPLETE.md)
 
 - **Lines of Code**: 15,000+ (Python)
 - **Documentation**: 12,000+ words
-- **Agent Skills**: 11 skill files
+- **Agent Skills**: 16 skill files (11 domain + 5 granular)
 - **MCP Servers**: 10 servers
 - **Watchers**: 8 active
 - **Test Scripts**: 9 test suites
@@ -651,7 +718,8 @@ See complete guide: [GCP_DEPLOYMENT_COMPLETE.md](GCP_DEPLOYMENT_COMPLETE.md)
 |-------------|----------------|----------|
 | Claude Code | Anthropic API via Python | `orchestrator_claude.py` |
 | Obsidian Vault | Single source of truth | `obsidian_vault/` |
-| Agent Skills | 11 markdown skill files | `obsidian_vault/agent_skills/` |
+| Agent Skills | 16 markdown skill files | `obsidian_vault/agent_skills/` |
+| Skill Mapper | Auto skill detection | `orchestration/skill_mapper.py` |
 | Watchers | 8 working watchers | `watcher_*.py` files |
 | MCP Servers | 10 action servers | `mcp_servers/*/` |
 | HITL Approvals | Folder-based workflow | `/Pending_Approval/` → `/Approved/` |
