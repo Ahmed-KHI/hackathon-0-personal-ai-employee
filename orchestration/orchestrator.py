@@ -28,6 +28,7 @@ from orchestration.audit_logger import get_audit_logger
 from orchestration.ralph_loop import get_ralph_loop, RalphLoopException
 from orchestration.retry_handler import get_retry_handler, RetryExhausted
 from orchestration.llm_interface import get_llm_interface
+from orchestration.skill_mapper import get_skill_mapper
 
 load_dotenv()
 
@@ -69,6 +70,7 @@ class Orchestrator:
         self.ralph_loop = get_ralph_loop()
         self.retry_handler = get_retry_handler()
         self.llm = get_llm_interface()  # LLM for reasoning (OpenAI or Anthropic)
+        self.skill_mapper = get_skill_mapper()  # Auto-detect skills (safety net)
         
         # State
         self.running = False
@@ -185,6 +187,10 @@ class Orchestrator:
         try:
             # Track iteration (Ralph Loop protection)
             iteration = self.ralph_loop.track_iteration(task_id)
+            
+            # CRITICAL: Ensure task has required_skills (auto-detect if missing)
+            # Per Hackathon Doc: "All AI functionality should be implemented as Agent Skills"
+            task = self.skill_mapper.add_skills_to_task(task)
             
             # Load required skills
             required_skills = task.get("required_skills", [])

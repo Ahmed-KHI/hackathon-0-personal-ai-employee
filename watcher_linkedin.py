@@ -243,7 +243,8 @@ class LinkedInWatcher:
                 'mode': 'platinum_tier_draft'
             },
             'instructions': instructions,
-            'security_note': 'This is a DRAFT from cloud watcher. Requires local approval before execution.'
+            'security_note': 'This is a DRAFT from cloud watcher. Requires local approval before execution.',
+            'required_skills': ['linkedin_skills', 'social_skills', 'approval_skills', 'planning_skills']
         }
         
         try:

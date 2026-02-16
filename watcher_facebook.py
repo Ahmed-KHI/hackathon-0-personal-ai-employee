@@ -302,7 +302,8 @@ Post Guidelines:
             'created_at': datetime.now().isoformat(),
             'content': content,
             'instructions': instructions,
-            'requires_approval': True
+            'requires_approval': True,
+            'required_skills': ['facebook_skills', 'social_skills', 'approval_skills', 'planning_skills']
         }
         
         try:

@@ -1,11 +1,12 @@
 """
 Gmail Watcher - Hackathon 0 Compliant
-Monitors Gmail for important emails and creates tasks in /Needs_Action
+Monitors Gmail for important emails and creates tasks in task_queue/inbox
 """
 
 import os
 import time
 import logging
+import json
 from pathlib import Path
 from datetime import datetime, timezone
 from typing import Optional, Any
@@ -20,12 +21,11 @@ logger = logging.getLogger(__name__)
 
 
 class GmailWatcher:
-    """Watches Gmail for important emails and creates tasks in /Needs_Action"""
+    """Watches Gmail for important emails and creates tasks in task_queue/inbox"""
     
-    def __init__(self, vault_path: str = "./obsidian_vault", check_interval: int = 120):
-        self.vault = Path(vault_path)
-        self.needs_action = self.vault / "Needs_Action"
-        self.needs_action.mkdir(parents=True, exist_ok=True)
+    def __init__(self, task_queue_path: str = "./task_queue", check_interval: int = 120):
+        self.task_queue = Path(task_queue_path) / "inbox"
+        self.task_queue.mkdir(parents=True, exist_ok=True)
         self.check_interval = check_interval
         self.processed_ids = set()
         self.service: Optional[Any] = None
@@ -69,7 +69,7 @@ class GmailWatcher:
             logger.error("Gmail service not initialized")
             return
             
-        """Create task file in /Needs_Action for email"""
+        """Create task file in task_queue/inbox for email"""
         try:
             msg = self.service.users().messages().get(
                 userId='me',
@@ -95,45 +95,46 @@ class GmailWatcher:
                 import base64
                 body = base64.urlsafe_b64decode(msg['payload']['body']['data']).decode('utf-8')
             
-            # Create markdown file per Hackathon 0 spec
-            task_file = self.needs_action / f"EMAIL_{message_id}.md"
+            # Create JSON task file per Hackathon 0 spec
+            task_id = f"email_{message_id}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
+            task_file = self.task_queue / f"{task_id}.json"
             
-            markdown_content = f"""---
-type: email
-from: {sender}
-subject: {subject}
-received: {datetime.now(timezone.utc).isoformat()}
-priority: high
-status: pending
-message_id: {message_id}
----
+            # Build task with required_skills for proper skill-based reasoning
+            task = {
+                'task_id': task_id,
+                'created_at': datetime.now(timezone.utc).isoformat(),
+                'source': 'gmail_watcher',
+                'type': 'email',
+                'priority': 'high',
+                'context': {
+                    'message_id': message_id,
+                    'from': sender,
+                    'subject': subject,
+                    'date': date,
+                    'body': body[:2000] if len(body) > 2000 else body,
+                    'body_truncated': len(body) > 2000,
+                    'full_body_length': len(body)
+                },
+                'instructions': """Review obsidian_vault/agent_skills/email_skills.md for email handling guidelines.
 
-## Email Content
-
-**From**: {sender}  
-**Subject**: {subject}  
-**Date**: {date}
-
-### Message Body
-
-```
-{body[:2000] if len(body) > 2000 else body}
-{'...[truncated]' if len(body) > 2000 else ''}
-```
-
-## Suggested Actions
-- [ ] Read and understand email content
-- [ ] Check if sender is known (search vault)
-- [ ] Draft appropriate response following Company_Handbook tone guidelines
-- [ ] If new sender OR sensitive topic → create approval request in /Pending_Approval
-- [ ] If known sender + routine → execute response
-- [ ] Update Dashboard.md
-- [ ] Mark email as read after processing
-"""
+Action Steps:
+1. Read and understand email content
+2. Check if sender is known (search vault)
+3. Determine priority based on email_skills.md rules
+4. Draft appropriate response following Company_Handbook tone guidelines
+5. If new sender OR sensitive topic → create approval request in /Pending_Approval
+6. If known sender + routine → execute response
+7. Update Dashboard.md
+8. Mark email as read after processing
+""",
+                'required_skills': ['email_skills', 'approval_skills', 'planning_skills']
+            }
             
-            task_file.write_text(markdown_content)
+            with open(task_file, 'w', encoding='utf-8') as f:
+                json.dump(task, f, indent=2, ensure_ascii=False)
+            
             self.processed_ids.add(message_id)
-            logger.info(f"Created email task: {task_file.name}")
+            logger.info(f"✅ Created email task: {task_file.name}")
             
         except Exception as e:
             logger.error(f"Error creating task for message {message_id}: {e}")

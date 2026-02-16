@@ -165,7 +165,8 @@ class TwitterWatcher:
             'priority': 'high' if trigger_type == 'breaking_news' else 'medium',
             'created_at': datetime.now().isoformat(),
             'content': content,
-            'instructions': self._get_instructions(trigger_type, content)
+            'instructions': self._get_instructions(trigger_type, content),
+            'required_skills': ['twitter_skills', 'social_skills', 'approval_skills', 'planning_skills']
         }
         
         with open(task_file, 'w') as f:

@@ -1,11 +1,12 @@
 """
 Filesystem Watcher - Hackathon 0 Compliant
-Monitors watch_inbox folder and creates tasks in /Needs_Action
+Monitors watch_inbox folder and creates tasks in task_queue/inbox
 """
 
 import os
 import time
 import logging
+import json
 from pathlib import Path
 from datetime import datetime, timezone
 from watchdog.observers import Observer
@@ -16,14 +17,13 @@ logger = logging.getLogger(__name__)
 
 
 class FilesystemWatcher(FileSystemEventHandler):
-    """Watches filesystem for new files and creates tasks in /Needs_Action"""
+    """Watches filesystem for new files and creates tasks in task_queue/inbox"""
     
-    def __init__(self, watch_path: str = "./watch_inbox", vault_path: str = "./obsidian_vault"):
+    def __init__(self, watch_path: str = "./watch_inbox", task_queue_path: str = "./task_queue"):
         self.watch_path = Path(watch_path)
-        self.vault = Path(vault_path)
-        self.needs_action = self.vault / "Needs_Action"
-        self.needs_action.mkdir(parents=True, exist_ok=True)
-        logger.info(f"Filesystem watcher initialized: {self.watch_path} → {self.needs_action}")
+        self.task_queue = Path(task_queue_path) / "inbox"
+        self.task_queue.mkdir(parents=True, exist_ok=True)
+        logger.info(f"Filesystem watcher initialized: {self.watch_path} → {self.task_queue}")
     
     def on_created(self, event):
         """Handle new file creation"""
@@ -71,43 +71,32 @@ class FilesystemWatcher(FileSystemEventHandler):
             except UnicodeDecodeError:
                 content_full = f"[Binary file - {file_path.stat().st_size} bytes - cannot display content]"
             
-            # Create task file in /Needs_Action as markdown (per Hackathon 0 spec)
-            task_file = self.needs_action / f"FILE_{file_path.name}.md"
+            # Create task file in task_queue/inbox as JSON (per Hackathon 0 spec)
+            task_id = f"file_{file_path.stem}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
+            task_file = self.task_queue / f"{task_id}.json"
             
-            # CRITICAL FIX: Store FULL content, not just preview
-            # This ensures Claude has all information needed for plan generation
-            markdown_content = f"""---
-type: file_drop
-original_name: {file_path.name}
-size: {file_path.stat().st_size}
-created: {datetime.now(timezone.utc).isoformat()}
-priority: medium
-status: pending
-content_length: {len(content_full)}
----
-
-## File Dropped for Processing
-
-**File**: {file_path.name}  
-**Size**: {file_path.stat().st_size} bytes  
-**Content Length**: {len(content_full)} characters  
-**Location**: {str(file_path.absolute())}  
-**Created**: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}
-
-## Full File Content
-
-```
-{content_full}
-```
-
-## Suggested Actions
-- [ ] Analyze file content and determine intent
-- [ ] Create appropriate plan in /Plans
-- [ ] Execute or request human approval if needed
-- [ ] Move to /Done when complete
-"""
+            # CRITICAL FIX: Store FULL content with required_skills
+            # This ensures Claude has all information and knows which skills to use
+            task = {
+                'task_id': task_id,
+                'created_at': datetime.now(timezone.utc).isoformat(),
+                'source': 'filesystem_watcher',
+                'type': 'file_process',
+                'priority': 'normal',
+                'context': {
+                    'file_name': file_path.name,
+                    'file_path': str(file_path.absolute()),
+                    'file_size_bytes': file_path.stat().st_size,
+                    'file_modified': file_path.stat().st_mtime,
+                    'file_extension': file_path.suffix,
+                    'contents': content_full
+                },
+                'required_skills': ['planning_skills', 'approval_skills']
+            }
             
-            task_file.write_text(markdown_content, encoding='utf-8')
+            with open(task_file, 'w', encoding='utf-8') as f:
+                json.dump(task, f, indent=2, ensure_ascii=False)
+            
             logger.info(f"✅ Created task: {task_file.name} (content: {len(content_full)} chars)")
             
         except Exception as e:

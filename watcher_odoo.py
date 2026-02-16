@@ -102,7 +102,8 @@ class OdooWatcher:
             'priority': 'high' if trigger_type in ['payment_received', 'invoice_due'] else 'medium',
             'created_at': datetime.now().isoformat(),
             'content': content,
-            'instructions': self._get_instructions(trigger_type, content)
+            'instructions': self._get_instructions(trigger_type, content),
+            'required_skills': ['odoo_skills', 'finance_skills', 'approval_skills', 'planning_skills']
         }
         
         with open(task_file, 'w') as f:
