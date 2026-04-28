@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/ahmed-khi-hackathon-0-personal-ai-employee-badge.png)](https://mseep.ai/app/ahmed-khi-hackathon-0-personal-ai-employee)
+
 # 🤖 Personal AI Employee - Autonomous Digital FTE
 
 <div align="center">
